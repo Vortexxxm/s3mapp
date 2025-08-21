@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const initialize = async () => {
       try {
+        setLoading(true);
         // Check for stored session
         const storedSession = await storage.getItemAsync('supabase-session');
         
@@ -42,12 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (session?.user) {
             await fetchProfile(session.user.id);
+          } else {
+            setProfile(null);
           }
-          
-          setLoading(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+      } finally {
         if (mounted) {
           setLoading(false);
         }
@@ -61,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
+      setLoading(true);
       setSession(session);
       
       // Store or remove session
@@ -76,6 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error handling auth state change:', error);
+      } finally {
+        setLoading(false);
       }
     });
 
@@ -94,9 +99,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        // If no profile exists yet, set profile to null
-        // This will trigger the ProfileSetupScreen
-        console.log('No profile found, will show setup screen');
+        if (error.code === 'PGRST116') {
+          // No profile exists yet - this is expected for new users
+          console.log('No profile found, will show setup screen');
+        } else {
+          console.error('Error fetching profile:', error);
+        }
         setProfile(null);
         return;
       }

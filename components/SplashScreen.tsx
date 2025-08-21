@@ -12,14 +12,14 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     // Start fade-in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 1000,
+      duration: 800,
       useNativeDriver: true,
     }).start();
 
-    // Navigate to main app after 3 seconds
+    // Navigate to main app after 2 seconds
     const timer = setTimeout(() => {
       onFinish();
-    }, 3000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [fadeAnim, onFinish]);
