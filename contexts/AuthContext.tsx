@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         if (error.code === 'PGRST116') {
           // No profile exists yet - this is expected for new users
-          console.log('No profile found, will show setup screen');
+          console.log('No profile found for new user, will show setup screen');
         } else {
           console.error('Error fetching profile:', error);
         }

@@ -21,7 +21,7 @@ export default function ProfileSetupScreen() {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const { updateProfile } = useAuth();
+  const { updateProfile, session } = useAuth();
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -61,7 +61,6 @@ export default function ProfileSetupScreen() {
 
     setLoading(true);
     try {
-      const { session } = useAuth();
       if (!session?.user) {
         throw new Error('No authenticated user found');
       }
