@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { CheckCircle, AlertCircle, Info } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Info } from 'lucide-react-native';
 
 interface UpdateToastProps {
   message: string;
