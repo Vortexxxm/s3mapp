@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, Profile } from '@/lib/supabase';
+import { supabase, supabaseAdmin, Profile } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { storage } from '@/lib/storage';
 
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Create profile
     if (data.user) {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert({
           id: data.user.id,
