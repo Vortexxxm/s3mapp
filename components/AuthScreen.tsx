@@ -50,11 +50,9 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
+          <View style={styles.logoPlaceholder}>
+            <Text style={styles.logoIcon}>S3M</Text>
+          </View>
           <Text style={styles.logo}>S3M HUB</Text>
           <Text style={styles.subtitle}>
             {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -140,11 +138,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoImage: {
+  logoPlaceholder: {
     width: 80,
     height: 80,
-    marginBottom: 16,
+    backgroundColor: '#FFD700',
     borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
   },
   logo: {
     fontSize: 36,

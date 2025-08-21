@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, Profile } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '@/lib/storage';
 
 interface AuthContextType {
   session: Session | null;
@@ -31,10 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Store or remove session
       if (session) {
-        await SecureStore.setItemAsync('supabase-session', JSON.stringify(session));
+        await storage.setItemAsync('supabase-session', JSON.stringify(session));
         await fetchProfile(session.user.id);
       } else {
-        await SecureStore.deleteItemAsync('supabase-session');
+        await storage.deleteItemAsync('supabase-session');
         setProfile(null);
       }
       
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeAuth = async () => {
     try {
       // Check for stored session
-      const storedSession = await SecureStore.getItemAsync('supabase-session');
+      const storedSession = await storage.getItemAsync('supabase-session');
       
       if (storedSession) {
         const parsedSession = JSON.parse(storedSession);
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await SecureStore.deleteItemAsync('supabase-session');
+    await storage.deleteItemAsync('supabase-session');
     await supabase.auth.signOut();
   };
 
