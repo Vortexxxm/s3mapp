@@ -23,6 +23,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      
+      // Store or remove session
+      if (session) {
+        await SecureStore.setItemAsync('supabase-session', JSON.stringify(session));
+        await fetchProfile(session.user.id);
+      } else {
+        await SecureStore.deleteItemAsync('supabase-session');
+        setProfile(null);
+      }
+      
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const initializeAuth = async () => {
@@ -48,29 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      
-      // Store or remove session
-      if (session) {
-        await SecureStore.setItemAsync('supabase-session', JSON.stringify(session));
-        await fetchProfile(session.user.id);
-      } else {
-        await SecureStore.deleteItemAsync('supabase-session');
-        setProfile(null);
-      }
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
 
   const fetchProfile = async (userId: string) => {
     try {
