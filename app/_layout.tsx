@@ -16,6 +16,7 @@ import AnimatedListItem from '@/components/AnimatedListItem';
 import UpdateToast from '@/components/UpdateToast';
 
 export default function TopPlayersScreen() {
+  useFrameworkReady();
   const { topPlayers, playersLoading, refreshTopPlayers } = useData();
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastPlayersCount, setLastPlayersCount] = useState(0);
