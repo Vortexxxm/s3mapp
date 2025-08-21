@@ -1,5 +1,5 @@
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { I18nManager } from 'react-native';
@@ -11,13 +11,6 @@ I18nManager.forceRTL(true);
 
 export default function RootLayout() {
   useFrameworkReady();
-
-  useEffect(() => {
-    // Ensure RTL is applied on component mount
-    if (!I18nManager.isRTL) {
-      I18nManager.forceRTL(true);
-    }
-  }, []);
 
   return (
     <AuthProvider>
