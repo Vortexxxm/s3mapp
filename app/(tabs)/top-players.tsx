@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   SafeAreaView,
+  I18nManager,
 } from 'react-native';
 import { Medal } from 'lucide-react-native';
 import { supabase, TopPlayer } from '@/lib/supabase';
@@ -15,6 +16,7 @@ export default function TopPlayersScreen() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    I18nManager.forceRTL(true);
     fetchTopPlayers();
     setupRealtimeSubscription();
   }, []);
@@ -90,8 +92,8 @@ export default function TopPlayersScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Top Players</Text>
-        <Text style={styles.headerSubtitle}>MVP Rankings</Text>
+        <Text style={styles.headerTitle}>أفضل لاعب</Text>
+        <Text style={styles.headerSubtitle}>ترتيب أفضل لاعب</Text>
       </View>
       
       <FlatList
@@ -128,12 +130,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   headerSubtitle: {
     fontSize: 16,
     color: '#CCCCCC',
     textAlign: 'center',
     marginTop: 4,
+    writingDirection: 'rtl',
   },
   listContainer: {
     padding: 20,
@@ -167,15 +171,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 6,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   teamName: {
     fontSize: 16,
     color: '#CCCCCC',
     marginBottom: 4,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   mvpPoints: {
     fontSize: 18,
     color: '#DC143C',
     fontWeight: '500',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
 });

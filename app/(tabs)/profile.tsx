@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ScrollView,
   Image,
   Modal,
+  I18nManager,
 } from 'react-native';
 import { User, LogOut, CreditCard as Edit3, Save, Camera, Key } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -27,9 +28,13 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  useEffect(() => {
+    I18nManager.forceRTL(true);
+  }, []);
+
   const handleSave = async () => {
     if (!username.trim()) {
-      Alert.alert('Error', 'Username cannot be empty');
+      Alert.alert('خطأ', 'لا يمكن أن يكون اسم المستخدم فارغاً');
       return;
     }
 
@@ -47,9 +52,9 @@ export default function ProfileScreen() {
       
       await updateProfile(updates);
       setEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert('نجح', 'تم تحديث الملف الشخصي بنجاح!');
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
     }
@@ -57,17 +62,17 @@ export default function ProfileScreen() {
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all password fields');
+      Alert.alert('خطأ', 'يرجى ملء جميع حقول كلمة المرور');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('خطأ', 'كلمات المرور غير متطابقة');
       return;
     }
 
     if (newPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert('خطأ', 'يجب أن تكون كلمة المرور 6 أحرف على الأقل');
       return;
     }
 
@@ -76,9 +81,9 @@ export default function ProfileScreen() {
       setShowPasswordModal(false);
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert('Success', 'Password changed successfully!');
+      Alert.alert('نجح', 'تم تغيير كلمة المرور بنجاح!');
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('خطأ', error.message);
     }
   };
 
@@ -86,7 +91,7 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to change your avatar.');
+      Alert.alert('إذن مطلوب', 'يرجى منح إذن الوصول للصور لتغيير صورتك الشخصية.');
       return;
     }
 
@@ -104,11 +109,11 @@ export default function ProfileScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      'تسجيل الخروج',
+      'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: signOut },
+        { text: 'إلغاء', style: 'cancel' },
+        { text: 'تسجيل الخروج', style: 'destructive', onPress: signOut },
       ]
     );
   };
@@ -116,7 +121,7 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>No profile found</Text>
+        <Text style={styles.errorText}>لم يتم العثور على ملف شخصي</Text>
       </SafeAreaView>
     );
   }
@@ -125,7 +130,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>الملف الشخصي</Text>
         </View>
 
         <View style={styles.profileContainer}>
@@ -146,13 +151,13 @@ export default function ProfileScreen() {
 
           <View style={styles.infoContainer}>
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Username</Text>
+              <Text style={styles.fieldLabel}>اسم المستخدم</Text>
               {editing ? (
                 <TextInput
                   style={styles.input}
                   value={username}
                   onChangeText={setUsername}
-                  placeholder="Enter username"
+                  placeholder="أدخل اسم المستخدم"
                   placeholderTextColor="#666"
                 />
               ) : (
@@ -161,49 +166,49 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Age</Text>
+              <Text style={styles.fieldLabel}>العمر</Text>
               {editing ? (
                 <TextInput
                   style={styles.input}
                   value={age}
                   onChangeText={setAge}
-                  placeholder="Enter age"
+                  placeholder="أدخل العمر"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
               ) : (
-                <Text style={styles.fieldValue}>{profile.age || 'Not set'}</Text>
+                <Text style={styles.fieldValue}>{profile.age || 'غير محدد'}</Text>
               )}
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Bio</Text>
+              <Text style={styles.fieldLabel}>النبذة الشخصية</Text>
               {editing ? (
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={bio}
                   onChangeText={setBio}
-                  placeholder="Tell us about yourself"
+                  placeholder="أخبرنا عن نفسك"
                   placeholderTextColor="#666"
                   multiline
                   numberOfLines={3}
                 />
               ) : (
-                <Text style={styles.fieldValue}>{profile.bio || 'No bio yet'}</Text>
+                <Text style={styles.fieldValue}>{profile.bio || 'لا توجد نبذة شخصية بعد'}</Text>
               )}
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Role</Text>
+              <Text style={styles.fieldLabel}>الدور</Text>
               <Text style={[styles.fieldValue, styles.roleText]}>
-                {profile.role.toUpperCase()}
+                {profile.role === 'admin' ? 'مشرف' : 'مستخدم'}
               </Text>
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Member Since</Text>
+              <Text style={styles.fieldLabel}>عضو منذ</Text>
               <Text style={styles.fieldValue}>
-                {new Date(profile.created_at).toLocaleDateString()}
+                {new Date(profile.created_at).toLocaleDateString('ar-SA')}
               </Text>
             </View>
           </View>
@@ -218,7 +223,7 @@ export default function ProfileScreen() {
                 >
                   <Save size={20} color="#000000" />
                   <Text style={styles.saveButtonText}>
-                    {loading ? 'Saving...' : 'Save'}
+                    {loading ? 'جاري الحفظ...' : 'حفظ'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -231,7 +236,7 @@ export default function ProfileScreen() {
                     setAvatarUrl(profile.avatar_url || '');
                   }}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>إلغاء</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -240,7 +245,7 @@ export default function ProfileScreen() {
                 onPress={() => setEditing(true)}
               >
                 <Edit3 size={20} color="#FFD700" />
-                <Text style={styles.editButtonText}>Edit Profile</Text>
+                <Text style={styles.editButtonText}>تعديل الملف الشخصي</Text>
               </TouchableOpacity>
             )}
 
@@ -249,7 +254,7 @@ export default function ProfileScreen() {
               onPress={() => setShowPasswordModal(true)}
             >
               <Key size={20} color="#FFD700" />
-              <Text style={styles.passwordButtonText}>Change Password</Text>
+              <Text style={styles.passwordButtonText}>تغيير كلمة المرور</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -257,7 +262,7 @@ export default function ProfileScreen() {
               onPress={handleSignOut}
             >
               <LogOut size={20} color="#FF4444" />
-              <Text style={styles.signOutButtonText}>Sign Out</Text>
+              <Text style={styles.signOutButtonText}>تسجيل الخروج</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -266,11 +271,11 @@ export default function ProfileScreen() {
       <Modal visible={showPasswordModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Change Password</Text>
+            <Text style={styles.modalTitle}>تغيير كلمة المرور</Text>
             
             <TextInput
               style={styles.input}
-              placeholder="New Password"
+              placeholder="كلمة المرور الجديدة"
               placeholderTextColor="#666"
               value={newPassword}
               onChangeText={setNewPassword}
@@ -279,7 +284,7 @@ export default function ProfileScreen() {
             
             <TextInput
               style={styles.input}
-              placeholder="Confirm New Password"
+              placeholder="تأكيد كلمة المرور الجديدة"
               placeholderTextColor="#666"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -291,7 +296,7 @@ export default function ProfileScreen() {
                 style={[styles.button, styles.saveButton]}
                 onPress={handleChangePassword}
               >
-                <Text style={styles.saveButtonText}>Change Password</Text>
+                <Text style={styles.saveButtonText}>تغيير كلمة المرور</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -302,7 +307,7 @@ export default function ProfileScreen() {
                   setConfirmPassword('');
                 }}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -331,6 +336,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   profileContainer: {
     padding: 20,
@@ -380,6 +386,8 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     marginBottom: 8,
     fontWeight: '500',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   fieldValue: {
     fontSize: 18,
@@ -389,6 +397,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#333',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   roleText: {
     color: '#DC143C',
@@ -402,6 +412,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#DC143C',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   textArea: {
     height: 80,
@@ -431,6 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+    writingDirection: 'rtl',
   },
   saveButton: {
     backgroundColor: '#DC143C',
@@ -440,6 +453,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+    writingDirection: 'rtl',
   },
   cancelButton: {
     backgroundColor: '#333',
@@ -448,6 +462,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    writingDirection: 'rtl',
   },
   passwordButton: {
     backgroundColor: '#1a1a1a',
@@ -459,6 +474,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+    writingDirection: 'rtl',
   },
   signOutButton: {
     backgroundColor: '#1a1a1a',
@@ -470,12 +486,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+    writingDirection: 'rtl',
   },
   errorText: {
     color: '#FF4444',
     fontSize: 18,
     textAlign: 'center',
     marginTop: 50,
+    writingDirection: 'rtl',
   },
   modalOverlay: {
     flex: 1,
@@ -496,6 +514,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 24,
+    writingDirection: 'rtl',
   },
   modalButtons: {
     marginTop: 16,

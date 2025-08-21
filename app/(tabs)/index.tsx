@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  I18nManager,
 } from 'react-native';
 import { Calendar, User, ChevronRight } from 'lucide-react-native';
 import { supabase, NewsItem } from '@/lib/supabase';
@@ -20,6 +21,7 @@ export default function HomeScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
+    I18nManager.forceRTL(true);
     fetchNews();
     setupRealtimeSubscription();
   }, []);
@@ -66,12 +68,12 @@ export default function HomeScreen() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('en-US', { 
-        month: 'short', 
+      date: date.toLocaleDateString('ar-SA', { 
+        month: 'long', 
         day: 'numeric', 
         year: 'numeric' 
       }),
-      time: date.toLocaleTimeString('en-US', { 
+      time: date.toLocaleTimeString('ar-SA', { 
         hour: '2-digit', 
         minute: '2-digit' 
       })
@@ -111,7 +113,7 @@ export default function HomeScreen() {
           <View style={styles.metaItem}>
             <User size={14} color="#DC143C" />
             <Text style={styles.metaText}>
-              {item.profiles?.username || 'S3M Admin'}
+              {item.profiles?.username || 'مشرف S3M'}
             </Text>
           </View>
         </View>
@@ -121,8 +123,8 @@ export default function HomeScreen() {
         </Text>
         
         <View style={styles.readMoreContainer}>
-          <Text style={styles.readMoreText}>Read more</Text>
           <ChevronRight size={16} color="#DC143C" />
+          <Text style={styles.readMoreText}>اقرأ المزيد</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -131,7 +133,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>S3M HUB News</Text>
+        <Text style={styles.headerTitle}>أخبار S3M HUB</Text>
       </View>
       
       <FlatList
@@ -174,6 +176,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   listContainer: {
     padding: 20,
@@ -215,23 +218,28 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 13,
     color: '#CCCCCC',
-    marginLeft: 6,
+    marginRight: 6,
     fontWeight: '500',
+    writingDirection: 'rtl',
   },
   newsDescription: {
     fontSize: 16,
     color: '#CCCCCC',
     lineHeight: 22,
     marginBottom: 16,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   readMoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   readMoreText: {
     fontSize: 14,
     color: '#DC143C',
     fontWeight: '600',
-    marginRight: 4,
+    marginLeft: 4,
+    writingDirection: 'rtl',
   },
 });

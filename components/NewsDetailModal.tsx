@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  I18nManager,
 } from 'react-native';
 import { X, Calendar, User } from 'lucide-react-native';
 import { NewsItem } from '@/lib/supabase';
@@ -19,18 +20,22 @@ interface NewsDetailModalProps {
 }
 
 export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDetailModalProps) {
+  useEffect(() => {
+    I18nManager.forceRTL(true);
+  }, []);
+
   if (!newsItem) return null;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('en-US', { 
+      date: date.toLocaleDateString('ar-SA', { 
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
       }),
-      time: date.toLocaleTimeString('en-US', { 
+      time: date.toLocaleTimeString('ar-SA', { 
         hour: '2-digit', 
         minute: '2-digit' 
       })
@@ -46,7 +51,7 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <X size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>News Details</Text>
+          <Text style={styles.headerTitle}>تفاصيل الخبر</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -66,13 +71,13 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
               <View style={styles.metaItem}>
                 <User size={16} color="#DC143C" />
                 <Text style={styles.metaText}>
-                  By {newsItem.profiles?.username || 'S3M Admin'}
+                  بواسطة {newsItem.profiles?.username || 'مشرف S3M'}
                 </Text>
               </View>
             </View>
             
             <View style={styles.timeContainer}>
-              <Text style={styles.timeText}>Published at {time}</Text>
+              <Text style={styles.timeText}>نُشر في {time}</Text>
             </View>
             
             <View style={styles.contentContainer}>
@@ -106,6 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    writingDirection: 'rtl',
   },
   placeholder: {
     width: 40,
@@ -127,6 +133,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 36,
     marginBottom: 16,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   metaInfo: {
     marginBottom: 12,
@@ -139,8 +147,9 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 14,
     color: '#CCCCCC',
-    marginLeft: 8,
+    marginRight: 8,
     fontWeight: '500',
+    writingDirection: 'rtl',
   },
   timeContainer: {
     paddingBottom: 20,
@@ -152,6 +161,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     fontStyle: 'italic',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   contentContainer: {
     marginBottom: 40,
@@ -160,5 +171,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     lineHeight: 26,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
 });

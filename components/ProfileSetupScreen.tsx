@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
+  I18nManager,
 } from 'react-native';
 import { Camera, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -23,11 +24,15 @@ export default function ProfileSetupScreen() {
   const [loading, setLoading] = useState(false);
   const { updateProfile, session } = useAuth();
 
+  useEffect(() => {
+    I18nManager.forceRTL(true);
+  }, []);
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to upload your profile picture.');
+      Alert.alert('إذن مطلوب', 'يرجى منح إذن الوصول للصور لرفع صورتك الشخصية.');
       return;
     }
 
@@ -45,24 +50,24 @@ export default function ProfileSetupScreen() {
 
   const handleComplete = async () => {
     if (!username.trim()) {
-      Alert.alert('Error', 'Username is required');
+      Alert.alert('خطأ', 'اسم المستخدم مطلوب');
       return;
     }
 
     if (!age.trim()) {
-      Alert.alert('Error', 'Age is required');
+      Alert.alert('خطأ', 'العمر مطلوب');
       return;
     }
 
     if (!avatarUrl) {
-      Alert.alert('Error', 'Profile picture is required');
+      Alert.alert('خطأ', 'الصورة الشخصية مطلوبة');
       return;
     }
 
     setLoading(true);
     try {
       if (!session?.user) {
-        throw new Error('No authenticated user found');
+        throw new Error('لم يتم العثور على مستخدم مصادق عليه');
       }
 
       // Create the profile in the database
@@ -89,7 +94,7 @@ export default function ProfileSetupScreen() {
       // No need for alert, the app will automatically navigate to main screens
     } catch (error: any) {
       console.error('Profile setup error:', error);
-      Alert.alert('Error', error.message);
+      Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
     }
@@ -103,8 +108,8 @@ export default function ProfileSetupScreen() {
             source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')} 
             style={styles.logo}
           />
-          <Text style={styles.title}>Complete Your Profile</Text>
-          <Text style={styles.subtitle}>Set up your profile to continue</Text>
+          <Text style={styles.title}>أكمل ملفك الشخصي</Text>
+          <Text style={styles.subtitle}>قم بإعداد ملفك الشخصي للمتابعة</Text>
         </View>
 
         <View style={styles.formContainer}>
@@ -121,39 +126,39 @@ export default function ProfileSetupScreen() {
                 <Camera size={20} color="#FFFFFF" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarLabel}>Profile Picture *</Text>
+            <Text style={styles.avatarLabel}>الصورة الشخصية *</Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Username *</Text>
+            <Text style={styles.inputLabel}>اسم المستخدم *</Text>
             <TextInput
               style={styles.input}
               value={username}
               onChangeText={setUsername}
-              placeholder="Enter your username"
+              placeholder="أدخل اسم المستخدم"
               placeholderTextColor="#666"
             />
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Age *</Text>
+            <Text style={styles.inputLabel}>العمر *</Text>
             <TextInput
               style={styles.input}
               value={age}
               onChangeText={setAge}
-              placeholder="Enter your age"
+              placeholder="أدخل عمرك"
               placeholderTextColor="#666"
               keyboardType="numeric"
             />
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Bio (Optional)</Text>
+            <Text style={styles.inputLabel}>النبذة الشخصية (اختياري)</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={bio}
               onChangeText={setBio}
-              placeholder="Tell us about yourself"
+              placeholder="أخبرنا عن نفسك"
               placeholderTextColor="#666"
               multiline
               numberOfLines={3}
@@ -166,7 +171,7 @@ export default function ProfileSetupScreen() {
             disabled={loading}
           >
             <Text style={styles.completeButtonText}>
-              {loading ? 'Setting up...' : 'Complete Setup'}
+              {loading ? 'جاري الإعداد...' : 'إكمال الإعداد'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -200,11 +205,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     marginBottom: 8,
+    writingDirection: 'rtl',
   },
   subtitle: {
     fontSize: 16,
     color: '#CCCCCC',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   formContainer: {
     flex: 1,
@@ -251,6 +258,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#CCCCCC',
     fontWeight: '500',
+    writingDirection: 'rtl',
   },
   inputContainer: {
     marginBottom: 20,
@@ -260,6 +268,8 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     marginBottom: 8,
     fontWeight: '500',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   input: {
     backgroundColor: '#1a1a1a',
@@ -269,6 +279,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#333',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   textArea: {
     height: 80,
@@ -288,5 +300,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    writingDirection: 'rtl',
   },
 });

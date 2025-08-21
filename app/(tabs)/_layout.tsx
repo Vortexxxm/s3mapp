@@ -1,11 +1,17 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Trophy, Medal, User, Settings } from 'lucide-react-native';
+import { Chrome as Home, Trophy, Medal, User, Settings, UserPlus } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
+import { I18nManager } from 'react-native';
 
 export default function TabLayout() {
   const { profile, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Force RTL layout
+    I18nManager.forceRTL(true);
+  }, []);
 
   useEffect(() => {
     // Only show admin tab if user is explicitly an admin
@@ -33,6 +39,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          fontFamily: 'System',
         },
         tabBarIconStyle: {
           marginTop: 4,
@@ -42,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'الرئيسية',
           tabBarIcon: ({ size, color }) => (
             <Home size={size} color={color} />
           ),
@@ -51,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="leaderboard"
         options={{
-          title: 'Leaderboard',
+          title: 'المتصدّرون',
           tabBarIcon: ({ size, color }) => (
             <Trophy size={size} color={color} />
           ),
@@ -60,16 +67,25 @@ export default function TabLayout() {
       <Tabs.Screen
         name="top-players"
         options={{
-          title: 'Top Players',
+          title: 'أفضل لاعب',
           tabBarIcon: ({ size, color }) => (
             <Medal size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="clan-requests"
+        options={{
+          title: 'طلب الإنضمام',
+          tabBarIcon: ({ size, color }) => (
+            <UserPlus size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'الملف الشخصي',
           tabBarIcon: ({ size, color }) => (
             <User size={size} color={color} />
           ),
@@ -79,7 +95,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="admin"
           options={{
-            title: 'Admin',
+            title: 'الإدارة',
             tabBarIcon: ({ size, color }) => (
               <Settings size={size} color={color} />
             ),

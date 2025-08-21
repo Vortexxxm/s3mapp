@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  I18nManager,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,9 +21,13 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
+  useEffect(() => {
+    I18nManager.forceRTL(true);
+  }, []);
+
   const handleAuth = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
       return;
     }
 
@@ -30,12 +35,12 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         await signUp(email, password);
-        Alert.alert('Success', 'Account created successfully!');
+        Alert.alert('نجح', 'تم إنشاء الحساب بنجاح!');
       } else {
         await signIn(email, password);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
     }
@@ -54,14 +59,14 @@ export default function AuthScreen() {
           />
           <Text style={styles.title}>S3M HUB</Text>
           <Text style={styles.subtitle}>
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? 'إنشاء حساب' : 'مرحباً بعودتك'}
           </Text>
         </View>
 
         <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="البريد الإلكتروني"
             placeholderTextColor="#666"
             value={email}
             onChangeText={setEmail}
@@ -70,7 +75,7 @@ export default function AuthScreen() {
           />
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder="كلمة المرور"
             placeholderTextColor="#666"
             value={password}
             onChangeText={setPassword}
@@ -83,7 +88,7 @@ export default function AuthScreen() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              {loading ? 'جاري التحميل...' : isSignUp ? 'إنشاء حساب' : 'تسجيل الدخول'}
             </Text>
           </TouchableOpacity>
 
@@ -93,8 +98,8 @@ export default function AuthScreen() {
           >
             <Text style={styles.switchText}>
               {isSignUp
-                ? 'Already have an account? Sign In'
-                : "Don't have an account? Sign Up"}
+                ? 'لديك حساب بالفعل؟ تسجيل الدخول'
+                : 'ليس لديك حساب؟ إنشاء حساب'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -128,11 +133,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     marginBottom: 8,
+    writingDirection: 'rtl',
   },
   subtitle: {
     fontSize: 18,
     color: '#FFFFFF',
     fontWeight: '300',
+    writingDirection: 'rtl',
   },
   formContainer: {
     width: '100%',
@@ -146,6 +153,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#333',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   button: {
     backgroundColor: '#DC143C',
@@ -161,6 +170,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+    writingDirection: 'rtl',
   },
   switchButton: {
     alignItems: 'center',
@@ -169,5 +179,6 @@ const styles = StyleSheet.create({
   switchText: {
     color: '#DC143C',
     fontSize: 16,
+    writingDirection: 'rtl',
   },
 });

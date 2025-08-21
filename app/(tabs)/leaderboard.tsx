@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   SafeAreaView,
+  I18nManager,
 } from 'react-native';
 import { Trophy } from 'lucide-react-native';
 import { supabase, LeaderboardEntry } from '@/lib/supabase';
@@ -15,6 +16,7 @@ export default function LeaderboardScreen() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    I18nManager.forceRTL(true);
     fetchLeaderboard();
     setupRealtimeSubscription();
   }, []);
@@ -89,7 +91,7 @@ export default function LeaderboardScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Leaderboard</Text>
+        <Text style={styles.headerTitle}>المتصدّرون</Text>
       </View>
       
       <FlatList
@@ -126,6 +128,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   listContainer: {
     padding: 20,
@@ -159,9 +162,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 4,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   points: {
     fontSize: 16,
     color: '#CCCCCC',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
 });

@@ -121,3 +121,14 @@ export type Notification = {
   read: boolean;
   created_at: string;
 };
+export type ClanJoinRequest = {
+  id: string;
+  user_id: string;
+  free_fire_username: string;
+  age: number;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  profiles?: Profile;
+};

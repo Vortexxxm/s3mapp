@@ -11,24 +11,26 @@ import {
   Modal,
   FlatList,
   Image,
+  I18nManager,
 } from 'react-native';
-import { Plus, CreditCard as Edit3, Trash2, Users, Trophy, Award, Newspaper as News } from 'lucide-react-native';
+import { Plus, CreditCard as Edit3, Trash2, Users, Trophy, Award, Newspaper as News, UserPlus, CheckCircle, XCircle } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase, supabaseAdmin, NewsItem, LeaderboardEntry, TopPlayer, Profile } from '@/lib/supabase';
+import { supabase, supabaseAdmin, NewsItem, LeaderboardEntry, TopPlayer, Profile, ClanJoinRequest } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 
 export default function AdminScreen() {
   const { session, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('news');
+  const [activeTab, setActiveTab] = useState('clan-requests');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [editingItem, setEditingItem] = useState<any>(null);
   
   // Security check - redirect if not admin
   useEffect(() => {
+    I18nManager.forceRTL(true);
     if (profile && profile.role !== 'admin') {
-      Alert.alert('Access Denied', 'You do not have permission to access this area.');
+      Alert.alert('الوصول مرفوض', 'ليس لديك إذن للوصول إلى هذه المنطقة.');
       router.replace('/');
       return;
     }
@@ -62,6 +64,9 @@ export default function AdminScreen() {
   // Users state
   const [users, setUsers] = useState<Profile[]>([]);
 
+  // Clan requests state
+  const [clanRequests, setClanRequests] = useState<ClanJoinRequest[]>([]);
+
   useEffect(() => {
     fetchData();
   }, [activeTab]);
@@ -84,6 +89,16 @@ export default function AdminScreen() {
         case 'users':
           const { data: usersData } = await supabaseAdmin.from('profiles').select('*').order('created_at', { ascending: false });
           setUsers(usersData || []);
+          break;
+        case 'clan-requests':
+          const { data: clanRequestsData } = await supabaseAdmin
+            .from('clan_join_requests')
+            .select(`
+              *,
+              profiles:user_id (username, avatar_url)
+            `)
+            .order('created_at', { ascending: false });
+          setClanRequests(clanRequestsData || []);
           break;
       }
     } catch (error) {
@@ -156,17 +171,48 @@ export default function AdminScreen() {
     }
   };
 
+  const handleClanRequestAction = async (requestId: string, action: 'approved' | 'rejected') => {
+    const actionText = action === 'approved' ? 'قبول' : 'رفض';
+    
+    Alert.alert(
+      `تأكيد ${actionText} الطلب`,
+      `هل أنت متأكد من رغبتك في ${actionText} هذا الطلب؟`,
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        {
+          text: actionText,
+          style: action === 'approved' ? 'default' : 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabaseAdmin
+                .from('clan_join_requests')
+                .update({ status: action })
+                .eq('id', requestId);
+
+              if (error) throw error;
+
+              Alert.alert('تم', `تم ${actionText} الطلب بنجاح!`);
+              fetchData(); // Refresh the data
+            } catch (error: any) {
+              Alert.alert('خطأ', error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleSave = async () => {
     try {
       switch (modalType) {
         case 'news':
           if (!newsTitle || !newsContent || !newsDescription) {
-            Alert.alert('Error', 'Please fill in title, description, and content');
+            Alert.alert('خطأ', 'يرجى ملء العنوان والوصف والمحتوى');
             return;
           }
           
           if (!newsImage) {
-            Alert.alert('Error', 'Please add an image for the news post');
+            Alert.alert('خطأ', 'يرجى إضافة صورة للخبر');
             return;
           }
           
@@ -189,7 +235,7 @@ export default function AdminScreen() {
 
         case 'leaderboard':
           if (!teamName || !points || !rank) {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
             return;
           }
           
@@ -210,7 +256,7 @@ export default function AdminScreen() {
 
         case 'player':
           if (!playerName || !playerTeam || !playerPosition || !mvpPoints) {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
             return;
           }
           
@@ -234,20 +280,20 @@ export default function AdminScreen() {
       setShowModal(false);
       clearForm();
       // Don't manually fetch data - real-time subscriptions will handle updates
-      Alert.alert('Success', `${modalType === 'news' ? 'News' : modalType === 'leaderboard' ? 'Team' : 'Player'} ${editingItem ? 'updated' : 'created'} successfully!`);
+      Alert.alert('نجح', `تم ${editingItem ? 'تحديث' : 'إنشاء'} ${modalType === 'news' ? 'الخبر' : modalType === 'leaderboard' ? 'الفريق' : 'اللاعب'} بنجاح!`);
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('خطأ', error.message);
     }
   };
 
   const handleDelete = async (type: string, id: string) => {
     Alert.alert(
-      'Confirm Delete',
-      `Are you sure you want to delete this ${type}?`,
+      'تأكيد الحذف',
+      `هل أنت متأكد من رغبتك في حذف هذا ${type === 'news' ? 'الخبر' : type === 'leaderboard' ? 'الفريق' : 'اللاعب'}؟`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'إلغاء', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'حذف',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -266,9 +312,9 @@ export default function AdminScreen() {
                   break;
               }
               // Don't manually fetch data - real-time subscriptions will handle updates
-              Alert.alert('Success', `${type} deleted successfully!`);
+              Alert.alert('نجح', `تم حذف ${type === 'news' ? 'الخبر' : type === 'leaderboard' ? 'الفريق' : 'اللاعب'} بنجاح!`);
             } catch (error: any) {
-              Alert.alert('Error', error.message);
+              Alert.alert('خطأ', error.message);
             }
           },
         },
@@ -362,33 +408,86 @@ export default function AdminScreen() {
     </View>
   );
 
+  const renderClanRequestItem = ({ item }: { item: ClanJoinRequest }) => (
+    <View style={styles.itemCard}>
+      <View style={styles.itemHeader}>
+        <Text style={styles.itemTitle}>{item.profiles?.username || 'مستخدم غير معروف'}</Text>
+        <View style={styles.requestStatus}>
+          <Text style={[
+            styles.statusText,
+            { color: item.status === 'pending' ? '#FFD700' : item.status === 'approved' ? '#4CAF50' : '#FF4444' }
+          ]}>
+            {item.status === 'pending' ? 'قيد المراجعة' : item.status === 'approved' ? 'تم القبول' : 'تم الرفض'}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.requestDetails}>
+        <Text style={styles.requestLabel}>اسم المستخدم في فري فاير:</Text>
+        <Text style={styles.requestValue}>{item.free_fire_username}</Text>
+        
+        <Text style={styles.requestLabel}>العمر:</Text>
+        <Text style={styles.requestValue}>{item.age} سنة</Text>
+        
+        <Text style={styles.requestLabel}>سبب الانضمام:</Text>
+        <Text style={styles.requestValue}>{item.reason}</Text>
+        
+        <Text style={styles.requestLabel}>تاريخ الطلب:</Text>
+        <Text style={styles.requestValue}>
+          {new Date(item.created_at).toLocaleDateString('ar-SA')} في {new Date(item.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+      </View>
+      
+      {item.status === 'pending' && (
+        <View style={styles.requestActions}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.approveButton]}
+            onPress={() => handleClanRequestAction(item.id, 'approved')}
+          >
+            <CheckCircle size={18} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>قبول</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, styles.rejectButton]}
+            onPress={() => handleClanRequestAction(item.id, 'rejected')}
+          >
+            <XCircle size={18} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>رفض</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Dashboard</Text>
+        <Text style={styles.headerTitle}>لوحة تحكم الإدارة</Text>
       </View>
 
       <View style={styles.tabContainer}>
-        {renderTabButton('news', <News size={20} color={activeTab === 'news' ? '#FFFFFF' : '#666'} />, 'News')}
-        {renderTabButton('leaderboard', <Trophy size={20} color={activeTab === 'leaderboard' ? '#FFFFFF' : '#666'} />, 'Leaderboard')}
-        {renderTabButton('players', <Award size={20} color={activeTab === 'players' ? '#FFFFFF' : '#666'} />, 'Players')}
-        {renderTabButton('users', <Users size={20} color={activeTab === 'users' ? '#FFFFFF' : '#666'} />, 'Users')}
+        {renderTabButton('clan-requests', <UserPlus size={20} color={activeTab === 'clan-requests' ? '#FFFFFF' : '#666'} />, 'طلبات الكلان')}
+        {renderTabButton('news', <News size={20} color={activeTab === 'news' ? '#FFFFFF' : '#666'} />, 'الأخبار')}
+        {renderTabButton('leaderboard', <Trophy size={20} color={activeTab === 'leaderboard' ? '#FFFFFF' : '#666'} />, 'المتصدّرون')}
+        {renderTabButton('players', <Award size={20} color={activeTab === 'players' ? '#FFFFFF' : '#666'} />, 'اللاعبون')}
+        {renderTabButton('users', <Users size={20} color={activeTab === 'users' ? '#FFFFFF' : '#666'} />, 'المستخدمون')}
       </View>
 
       <View style={styles.content}>
-        {activeTab !== 'users' && (
+        {activeTab !== 'users' && activeTab !== 'clan-requests' && (
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => openModal(activeTab === 'leaderboard' ? 'leaderboard' : activeTab === 'players' ? 'player' : 'news')}
           >
             <Plus size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Add {activeTab === 'leaderboard' ? 'Team' : activeTab === 'players' ? 'Player' : 'News'}</Text>
+            <Text style={styles.addButtonText}>إضافة {activeTab === 'leaderboard' ? 'فريق' : activeTab === 'players' ? 'لاعب' : 'خبر'}</Text>
           </TouchableOpacity>
         )}
 
         <FlatList
-          data={activeTab === 'news' ? news : activeTab === 'leaderboard' ? leaderboard : activeTab === 'players' ? topPlayers : users}
-          renderItem={activeTab === 'news' ? renderNewsItem : activeTab === 'leaderboard' ? renderLeaderboardItem : activeTab === 'players' ? renderPlayerItem : renderUserItem}
+          data={activeTab === 'news' ? news : activeTab === 'leaderboard' ? leaderboard : activeTab === 'players' ? topPlayers : activeTab === 'users' ? users : clanRequests}
+          renderItem={activeTab === 'news' ? renderNewsItem : activeTab === 'leaderboard' ? renderLeaderboardItem : activeTab === 'players' ? renderPlayerItem : activeTab === 'users' ? renderUserItem : renderClanRequestItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
@@ -399,7 +498,7 @@ export default function AdminScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {editingItem ? 'Edit' : 'Add'} {modalType === 'leaderboard' ? 'Team' : modalType === 'player' ? 'Player' : 'News'}
+              {editingItem ? 'تعديل' : 'إضافة'} {modalType === 'leaderboard' ? 'فريق' : modalType === 'player' ? 'لاعب' : 'خبر'}
             </Text>
 
             <ScrollView style={styles.modalForm}>
@@ -407,14 +506,14 @@ export default function AdminScreen() {
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="News Title"
+                    placeholder="عنوان الخبر"
                     placeholderTextColor="#666"
                     value={newsTitle}
                     onChangeText={setNewsTitle}
                   />
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="Short Description (appears in news feed)"
+                    placeholder="وصف قصير (يظهر في تغذية الأخبار)"
                     placeholderTextColor="#666"
                     value={newsDescription}
                     onChangeText={setNewsDescription}
@@ -423,7 +522,7 @@ export default function AdminScreen() {
                   />
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="Full News Content (appears when users click 'Read more')"
+                    placeholder="محتوى الخبر الكامل (يظهر عندما ينقر المستخدمون على 'اقرأ المزيد')"
                     placeholderTextColor="#666"
                     value={newsContent}
                     onChangeText={setNewsContent}
@@ -432,7 +531,7 @@ export default function AdminScreen() {
                   />
                   <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
                     <Text style={styles.imageButtonText}>
-                      {newsImage ? 'Change Image' : 'Add Image (Required)'}
+                      {newsImage ? 'تغيير الصورة' : 'إضافة صورة (مطلوب)'}
                     </Text>
                   </TouchableOpacity>
                   {newsImage && <Image source={{ uri: newsImage }} style={styles.previewImage} />}
@@ -443,14 +542,14 @@ export default function AdminScreen() {
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="Team Name"
+                    placeholder="اسم الفريق"
                     placeholderTextColor="#666"
                     value={teamName}
                     onChangeText={setTeamName}
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="Points"
+                    placeholder="النقاط"
                     placeholderTextColor="#666"
                     value={points}
                     onChangeText={setPoints}
@@ -458,7 +557,7 @@ export default function AdminScreen() {
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="Rank"
+                    placeholder="الترتيب"
                     placeholderTextColor="#666"
                     value={rank}
                     onChangeText={setRank}
@@ -471,28 +570,28 @@ export default function AdminScreen() {
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="Player Name"
+                    placeholder="اسم اللاعب"
                     placeholderTextColor="#666"
                     value={playerName}
                     onChangeText={setPlayerName}
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="Team Name"
+                    placeholder="اسم الفريق"
                     placeholderTextColor="#666"
                     value={playerTeam}
                     onChangeText={setPlayerTeam}
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="Position"
+                    placeholder="المركز"
                     placeholderTextColor="#666"
                     value={playerPosition}
                     onChangeText={setPlayerPosition}
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="MVP Points"
+                    placeholder="نقاط أفضل لاعب"
                     placeholderTextColor="#666"
                     value={mvpPoints}
                     onChangeText={setMvpPoints}
@@ -504,7 +603,7 @@ export default function AdminScreen() {
 
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save</Text>
+               <Text style={styles.saveButtonText}>حفظ</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -514,7 +613,7 @@ export default function AdminScreen() {
                 }}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
+              <Text style={styles.cancelButtonText}>إلغاء</Text>
             </View>
           </View>
         </View>
@@ -539,6 +638,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#DC143C',
     textAlign: 'center',
+    writingDirection: 'rtl',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -563,6 +663,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 4,
     fontWeight: '500',
+    writingDirection: 'rtl',
   },
   activeTabText: {
     color: '#FFFFFF',
@@ -585,6 +686,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+    writingDirection: 'rtl',
   },
   listContainer: {
     paddingBottom: 20,
@@ -608,6 +710,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     flex: 1,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   itemActions: {
     flexDirection: 'row',
@@ -617,17 +721,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#CCCCCC',
     marginBottom: 8,
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   itemDescription: {
     fontSize: 15,
     color: '#FFFFFF',
     marginBottom: 8,
     fontWeight: '500',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   itemDate: {
     fontSize: 12,
     color: '#888',
     fontStyle: 'italic',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   itemImage: {
     width: '100%',
@@ -639,6 +749,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#DC143C',
     fontWeight: '500',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   roleText: {
     fontSize: 12,
@@ -652,6 +764,59 @@ const styles = StyleSheet.create({
   adminRole: {
     color: '#DC143C',
     backgroundColor: 'rgba(220, 20, 60, 0.2)',
+  },
+  requestStatus: {
+    alignItems: 'flex-end',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    writingDirection: 'rtl',
+  },
+  requestDetails: {
+    marginBottom: 16,
+  },
+  requestLabel: {
+    fontSize: 14,
+    color: '#CCCCCC',
+    fontWeight: '500',
+    marginBottom: 4,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  requestValue: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 12,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'flex-end',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 80,
+    justifyContent: 'center',
+  },
+  approveButton: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectButton: {
+    backgroundColor: '#FF4444',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 6,
+    writingDirection: 'rtl',
   },
   modalOverlay: {
     flex: 1,
@@ -673,6 +838,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 20,
+    writingDirection: 'rtl',
   },
   modalForm: {
     maxHeight: 400,
@@ -686,6 +852,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#333',
+    writingDirection: 'rtl',
+    textAlign: 'right',
   },
   textArea: {
     height: 100,
@@ -702,6 +870,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
+    writingDirection: 'rtl',
   },
   previewImage: {
     width: '100%',
@@ -725,6 +894,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    writingDirection: 'rtl',
   },
   cancelButton: {
     flex: 1,
@@ -737,5 +907,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+    writingDirection: 'rtl',
   },
 });
