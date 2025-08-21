@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  initializing: boolean;
   signUp: (email: string, password: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -19,40 +20,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     
     const initialize = async () => {
       try {
-        setLoading(true);
-        // Check for stored session
-        const storedSession = await storage.getItemAsync('supabase-session');
-        
-        if (storedSession && mounted) {
-          const parsedSession = JSON.parse(storedSession);
-          await supabase.auth.setSession(parsedSession);
-        }
-
-        // Get current session
+        // Get current session (this is fast, uses cache)
         const { data: { session } } = await supabase.auth.getSession();
         
         if (mounted) {
           setSession(session);
+          setInitializing(false);
           
+          // Fetch profile in background if session exists
           if (session?.user) {
-            await fetchProfile(session.user.id);
+            fetchProfile(session.user.id);
           } else {
             setProfile(null);
           }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
         if (mounted) {
-          setLoading(false);
+          setInitializing(false);
         }
+      } finally {
+        // Don't set loading here, let initializing handle it
       }
     };
 
@@ -63,24 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      setLoading(true);
       setSession(session);
       
-      // Store or remove session
-      try {
-        if (session) {
-          await storage.setItemAsync('supabase-session', JSON.stringify(session));
-          if (session.user) {
-            await fetchProfile(session.user.id);
-          }
-        } else {
-          await storage.deleteItemAsync('supabase-session');
-          setProfile(null);
-        }
-      } catch (error) {
-        console.error('Error handling auth state change:', error);
-      } finally {
-        setLoading(false);
+      // Handle profile in background
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
       }
     });
 
@@ -91,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (userId: string) => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -113,6 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         profile,
         loading,
+        initializing,
         signUp,
         signIn,
         signOut,

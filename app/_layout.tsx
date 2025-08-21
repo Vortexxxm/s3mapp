@@ -19,33 +19,39 @@ function LoadingScreen() {
 }
 
 function AppContent() {
-  const { session, loading, profile } = useAuth();
+  const { session, loading, profile, initializing } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
-  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    // Wait for auth to finish loading before hiding splash
-    if (!loading) {
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        setInitializing(false);
-      }, 1000); // Give splash screen at least 1 second
+    // Show splash for exactly 2.5 seconds, then navigate based on auth state
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
 
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Show splash screen first
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
   }
 
-  // Show loading while auth is initializing
-  if (initializing || loading) {
+  // Show brief loading only while auth is initializing (should be very fast)
+  if (initializing) {
     return <LoadingScreen />;
   }
 
-  // No session - show auth screen
+  // Show loading only when fetching profile data
+  if (loading && session) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#DC143C" />
+        <Text style={styles.loadingText}>Setting up your profile...</Text>
+      </View>
+    );
+  }
+
+  // No session - show auth screen immediately
   if (!session) {
     return <AuthScreen />;
   }
@@ -62,6 +68,43 @@ function AppContent() {
       <Stack.Screen name="+not-found" />
     </Stack>
   );
+}
+
+export default function RootLayout() {
+  useFrameworkReady();
+
+  return (
+    <>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+      <StatusBar style="light" />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginTop: 16,
+  },
+});
+
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        setInitializing(false);
+      }, 1000); // Give splash screen at least 1 second
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 }
 
 export default function RootLayout() {
