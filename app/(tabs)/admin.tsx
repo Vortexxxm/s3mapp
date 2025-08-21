@@ -12,7 +12,7 @@ import {
   FlatList,
   Image,
 } from 'react-native';
-import { Plus, Edit3, Trash2, Users, Trophy, Award, News } from 'lucide-react-native';
+import { Plus, CreditCard as Edit3, Trash2, Users, Trophy, Award, Newspaper as News } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase, supabaseAdmin, NewsItem, LeaderboardEntry, TopPlayer, Profile } from '@/lib/supabase';
 
