@@ -12,13 +12,13 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import { Settings, Plus, CreditCard as Edit3, Trash2, Save, X, Camera, Users, Trophy, Medal, Star } from 'lucide-react-native';
+import { Settings, Plus, CreditCard as Edit3, Trash2, Save, X, Camera, Users, Trophy, Medal, Star, Bell, Send } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase, Profile } from '@/lib/supabase';
+import { supabase, Profile, Notification } from '@/lib/supabase';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-type AdminSection = 'news' | 'leaderboard' | 'players' | 'awards' | 'users';
+type AdminSection = 'news' | 'leaderboard' | 'players' | 'awards' | 'users' | 'notifications' | 'clan-requests';
 
 export default function AdminScreen() {
   const { profile } = useAuth();
@@ -86,9 +86,28 @@ export default function AdminScreen() {
     avatar_url: '',
   });
 
+  // Notifications management
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationForm, setNotificationForm] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'info' | 'news' | 'award' | 'leaderboard',
+    target: 'all' as 'all' | 'specific',
+    user_id: '',
+  });
+
+  // Clan requests management
+  const [clanRequests, setClanRequests] = useState<any[]>([]);
+  const [showClanRequestModal, setShowClanRequestModal] = useState(false);
+
   useEffect(() => {
     // Data is already being fetched by DataProvider
-  }, []);
+    if (activeSection === 'users') {
+      fetchUsers();
+    } else if (activeSection === 'clan-requests') {
+      fetchClanRequests();
+    }
+  }, [activeSection]);
 
   const fetchUsers = async () => {
     try {
@@ -101,6 +120,102 @@ export default function AdminScreen() {
     } catch (error) {
       console.error('Error fetching users:', error);
     }
+  };
+
+  const fetchClanRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clan_join_requests')
+        .select('*, profiles:user_id (username)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setClanRequests(data || []);
+    } catch (error) {
+      console.error('Error fetching clan requests:', error);
+    }
+  };
+
+  const handleUpdateRequestStatus = async (requestId: string, status: 'approved' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('clan_join_requests')
+        .update({ status })
+        .eq('id', requestId);
+      
+      if (error) throw error;
+      
+      Alert.alert('نجح', `تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب`);
+      fetchClanRequests();
+    } catch (error: any) {
+      Alert.alert('خطأ', error.message);
+    }
+  };
+
+  const handleSendNotification = async () => {
+    if (!notificationForm.title.trim() || !notificationForm.message.trim()) {
+      Alert.alert('خطأ', 'العنوان والرسالة مطلوبان');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (notificationForm.target === 'all') {
+        // Send to all users
+        const { data: allUsers, error: usersError } = await supabase
+          .from('profiles')
+          .select('id');
+        
+        if (usersError) throw usersError;
+        
+        const notifications = allUsers.map(user => ({
+          user_id: user.id,
+          title: notificationForm.title.trim(),
+          message: notificationForm.message.trim(),
+          type: notificationForm.type,
+        }));
+        
+        const { error } = await supabase
+          .from('notifications')
+          .insert(notifications);
+        
+        if (error) throw error;
+      } else {
+        // Send to specific user
+        if (!notificationForm.user_id) {
+          Alert.alert('خطأ', 'يرجى اختيار مستخدم');
+          return;
+        }
+        
+        const { error } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: notificationForm.user_id,
+            title: notificationForm.title.trim(),
+            message: notificationForm.message.trim(),
+            type: notificationForm.type,
+          });
+        
+        if (error) throw error;
+      }
+
+      resetNotificationForm();
+      Alert.alert('نجح', 'تم إرسال الإشعار بنجاح');
+    } catch (error: any) {
+      Alert.alert('خطأ', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetNotificationForm = () => {
+    setNotificationForm({
+      title: '',
+      message: '',
+      type: 'info',
+      target: 'all',
+      user_id: '',
+    });
+    setShowNotificationModal(false);
   };
 
   const pickImage = async (callback: (uri: string) => void) => {
@@ -499,6 +614,22 @@ export default function AdminScreen() {
           المستخدمون
         </Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.sectionButton, activeSection === 'notifications' && styles.activeSectionButton]}
+        onPress={() => setActiveSection('notifications')}
+      >
+        <Text style={[styles.sectionButtonText, activeSection === 'notifications' && styles.activeSectionButtonText]}>
+          الإشعارات
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.sectionButton, activeSection === 'clan-requests' && styles.activeSectionButton]}
+        onPress={() => setActiveSection('clan-requests')}
+      >
+        <Text style={[styles.sectionButtonText, activeSection === 'clan-requests' && styles.activeSectionButtonText]}>
+          طلبات الكلان
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -760,6 +891,69 @@ export default function AdminScreen() {
     </View>
   );
 
+  const renderNotificationsSection = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowNotificationModal(true)}
+        >
+          <Plus size={20} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>إرسال إشعار</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.sectionDescription}>
+        إرسال إشعارات للمستخدمين حول الأخبار والتحديثات
+      </Text>
+    </View>
+  );
+
+  const renderClanRequestsSection = () => (
+    <View style={styles.section}>
+      <FlatList
+        data={clanRequests}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.requestCard}>
+            <View style={styles.requestHeader}>
+              <Text style={styles.requestUsername}>
+                {item.profiles?.username || 'مستخدم غير معروف'}
+              </Text>
+              <Text style={[styles.requestStatus, { 
+                color: item.status === 'pending' ? '#FFD700' : 
+                       item.status === 'approved' ? '#4CAF50' : '#FF4444' 
+              }]}>
+                {item.status === 'pending' ? 'قيد المراجعة' : 
+                 item.status === 'approved' ? 'تم القبول' : 'تم الرفض'}
+              </Text>
+            </View>
+            <Text style={styles.requestDetail}>فري فاير: {item.free_fire_username}</Text>
+            <Text style={styles.requestDetail}>العمر: {item.age} سنة</Text>
+            <Text style={styles.requestReason}>{item.reason}</Text>
+            
+            {item.status === 'pending' && (
+              <View style={styles.requestActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.approveButton]}
+                  onPress={() => handleUpdateRequestStatus(item.id, 'approved')}
+                >
+                  <Text style={styles.actionButtonText}>قبول</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.rejectButton]}
+                  onPress={() => handleUpdateRequestStatus(item.id, 'rejected')}
+                >
+                  <Text style={styles.actionButtonText}>رفض</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+        scrollEnabled={false}
+      />
+    </View>
+  );
+
   const renderCurrentSection = () => {
     switch (activeSection) {
       case 'news':
@@ -772,6 +966,10 @@ export default function AdminScreen() {
         return renderAwardsSection();
       case 'users':
         return renderUsersSection();
+      case 'notifications':
+        return renderNotificationsSection();
+      case 'clan-requests':
+        return renderClanRequestsSection();
       default:
         return renderNewsSection();
     }
@@ -1144,6 +1342,129 @@ export default function AdminScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
+
+      {/* Notifications Modal */}
+      <Modal visible={showNotificationModal} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={resetNotificationForm}>
+              <X size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>إرسال إشعار</Text>
+            <TouchableOpacity onPress={handleSendNotification} disabled={loading}>
+              <Send size={24} color="#DC143C" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <TextInput
+              style={styles.input}
+              placeholder="عنوان الإشعار"
+              placeholderTextColor="#666"
+              value={notificationForm.title}
+              onChangeText={(text) => setNotificationForm({ ...notificationForm, title: text })}
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="رسالة الإشعار"
+              placeholderTextColor="#666"
+              value={notificationForm.message}
+              onChangeText={(text) => setNotificationForm({ ...notificationForm, message: text })}
+              multiline
+              numberOfLines={4}
+            />
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerLabel}>نوع الإشعار</Text>
+              <View style={styles.pickerButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pickerButton,
+                    notificationForm.type === 'info' && styles.activePickerButton,
+                  ]}
+                  onPress={() => setNotificationForm({ ...notificationForm, type: 'info' })}
+                >
+                  <Text
+                    style={[
+                      styles.pickerButtonText,
+                      notificationForm.type === 'info' && styles.activePickerButtonText,
+                    ]}
+                  >
+                    معلومات
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pickerButton,
+                    notificationForm.type === 'news' && styles.activePickerButton,
+                  ]}
+                  onPress={() => setNotificationForm({ ...notificationForm, type: 'news' })}
+                >
+                  <Text
+                    style={[
+                      styles.pickerButtonText,
+                      notificationForm.type === 'news' && styles.activePickerButtonText,
+                    ]}
+                  >
+                    أخبار
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pickerButton,
+                    notificationForm.type === 'award' && styles.activePickerButton,
+                  ]}
+                  onPress={() => setNotificationForm({ ...notificationForm, type: 'award' })}
+                >
+                  <Text
+                    style={[
+                      styles.pickerButtonText,
+                      notificationForm.type === 'award' && styles.activePickerButtonText,
+                    ]}
+                  >
+                    جوائز
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.pickerContainer}>
+              <Text style={styles.pickerLabel}>المستهدفون</Text>
+              <View style={styles.pickerButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pickerButton,
+                    notificationForm.target === 'all' && styles.activePickerButton,
+                  ]}
+                  onPress={() => setNotificationForm({ ...notificationForm, target: 'all' })}
+                >
+                  <Text
+                    style={[
+                      styles.pickerButtonText,
+                      notificationForm.target === 'all' && styles.activePickerButtonText,
+                    ]}
+                  >
+                    جميع المستخدمين
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pickerButton,
+                    notificationForm.target === 'specific' && styles.activePickerButton,
+                  ]}
+                  onPress={() => setNotificationForm({ ...notificationForm, target: 'specific' })}
+                >
+                  <Text
+                    style={[
+                      styles.pickerButtonText,
+                      notificationForm.target === 'specific' && styles.activePickerButtonText,
+                    ]}
+                  >
+                    مستخدم محدد
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1396,5 +1717,73 @@ const styles = StyleSheet.create({
   },
   activePickerButtonText: {
     color: '#FFFFFF',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#CCCCCC',
+    textAlign: 'center',
+    marginTop: 20,
+    writingDirection: 'rtl',
+  },
+  requestCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  requestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  requestUsername: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    writingDirection: 'rtl',
+  },
+  requestStatus: {
+    fontSize: 14,
+    fontWeight: '600',
+    writingDirection: 'rtl',
+  },
+  requestDetail: {
+    fontSize: 14,
+    color: '#CCCCCC',
+    marginBottom: 4,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  requestReason: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 12,
+    writingDirection: 'rtl',
+    textAlign: 'right',
+  },
+  requestActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  actionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  approveButton: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectButton: {
+    backgroundColor: '#FF4444',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    writingDirection: 'rtl',
   },
 });

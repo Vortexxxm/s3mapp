@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, ClanJoinRequest } from '@/lib/supabase';
+import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, ClanJoinRequest, Notification } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {
@@ -9,6 +9,7 @@ interface DataContextType {
   topPlayers: TopPlayer[];
   awards: SpecialAward[];
   clanRequests: ClanJoinRequest[];
+  notifications: Notification[];
   
   // Loading states
   newsLoading: boolean;
@@ -16,6 +17,7 @@ interface DataContextType {
   playersLoading: boolean;
   awardsLoading: boolean;
   requestsLoading: boolean;
+  notificationsLoading: boolean;
   
   // Refresh functions
   refreshNews: () => Promise<void>;
@@ -23,7 +25,9 @@ interface DataContextType {
   refreshTopPlayers: () => Promise<void>;
   refreshAwards: () => Promise<void>;
   refreshClanRequests: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
   refreshAll: () => Promise<void>;
+  markNotificationAsRead: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -37,6 +41,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
   const [awards, setAwards] = useState<SpecialAward[]>([]);
   const [clanRequests, setClanRequests] = useState<ClanJoinRequest[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   
   // Loading states
   const [newsLoading, setNewsLoading] = useState(false);
@@ -44,6 +49,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [playersLoading, setPlayersLoading] = useState(false);
   const [awardsLoading, setAwardsLoading] = useState(false);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   // Fetch functions with optimized loading states
   const refreshNews = useCallback(async () => {
@@ -143,6 +149,43 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session?.user, profile?.role]);
 
+  const refreshNotifications = useCallback(async () => {
+    if (!session?.user) return;
+    
+    setNotificationsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [session?.user]);
+
+  const markNotificationAsRead = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setNotifications(prev => prev.map(notif => 
+        notif.id === id ? { ...notif, read: true } : notif
+      ));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     await Promise.all([
       refreshNews(),
@@ -150,8 +193,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       refreshTopPlayers(),
       refreshAwards(),
       refreshClanRequests(),
+      refreshNotifications(),
     ]);
-  }, [refreshNews, refreshLeaderboard, refreshTopPlayers, refreshAwards, refreshClanRequests]);
+  }, [refreshNews, refreshLeaderboard, refreshTopPlayers, refreshAwards, refreshClanRequests, refreshNotifications]);
 
   // Initial data fetch
   useEffect(() => {
@@ -297,6 +341,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
+    // Notifications subscription
+    const notificationsSubscription = supabase
+      .channel('user_notifications_changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${session.user.id}`
+        },
+        (payload) => {
+          console.log('🔔 Notifications update detected:', payload.eventType);
+          
+          if (payload.eventType === 'INSERT' && payload.new) {
+            setNotifications(prev => [payload.new as Notification, ...prev]);
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setNotifications(prev => prev.map(item => 
+              item.id === payload.new.id ? { ...item, ...payload.new } : item
+            ));
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setNotifications(prev => prev.filter(item => item.id !== payload.old.id));
+          } else {
+            refreshNotifications();
+          }
+        }
+      )
+      .subscribe();
+
     console.log('✅ All real-time subscriptions active');
 
     return () => {
@@ -306,8 +379,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       playersSubscription.unsubscribe();
       awardsSubscription.unsubscribe();
       requestsSubscription.unsubscribe();
+      notificationsSubscription.unsubscribe();
     };
-  }, [session, profile?.role, refreshNews, refreshLeaderboard, refreshTopPlayers, refreshAwards, refreshClanRequests]);
+  }, [session, profile?.role, refreshNews, refreshLeaderboard, refreshTopPlayers, refreshAwards, refreshClanRequests, refreshNotifications]);
 
   return (
     <DataContext.Provider
@@ -317,17 +391,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         topPlayers,
         awards,
         clanRequests,
+        notifications,
         newsLoading,
         leaderboardLoading,
         playersLoading,
         awardsLoading,
         requestsLoading,
+        notificationsLoading,
         refreshNews,
         refreshLeaderboard,
         refreshTopPlayers,
         refreshAwards,
         refreshClanRequests,
+        refreshNotifications,
         refreshAll,
+        markNotificationAsRead,
       }}
     >
       {children}

@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  Alert,
 } from 'react-native';
-import { X, Calendar, User } from 'lucide-react-native';
-import { NewsItem } from '@/lib/supabase';
+import { X, Calendar, User, UserPlus } from 'lucide-react-native';
+import { NewsItem, supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NewsDetailModalProps {
   visible: boolean;
@@ -19,6 +21,8 @@ interface NewsDetailModalProps {
 }
 
 export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDetailModalProps) {
+  const { session } = useAuth();
+  
   if (!newsItem) return null;
 
   const formatDate = (dateString: string) => {
@@ -38,7 +42,29 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
   };
 
   const { date, time } = formatDate(newsItem.created_at);
+  
+  // Check if this news is about clan recruitment
+  const isClanRecruitment = newsItem.title.toLowerCase().includes('كلان') || 
+                           newsItem.title.toLowerCase().includes('انضمام') ||
+                           newsItem.content.toLowerCase().includes('فتح التقديم');
 
+  const handleJoinClan = () => {
+    Alert.alert(
+      'طلب الانضمام للكلان',
+      'هل تريد تقديم طلب للانضمام للكلان؟',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        { 
+          text: 'نعم', 
+          onPress: () => {
+            onClose();
+            // Navigate to clan request form (you can implement navigation here)
+            Alert.alert('معلومات', 'يرجى الذهاب إلى قسم "أفضل زعيم" لتقديم طلب الانضمام');
+          }
+        },
+      ]
+    );
+  };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.container}>
@@ -78,6 +104,13 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
             <View style={styles.contentContainer}>
               <Text style={styles.fullContent}>{newsItem.content}</Text>
             </View>
+            
+            {isClanRecruitment && (
+              <TouchableOpacity style={styles.joinClanButton} onPress={handleJoinClan}>
+                <UserPlus size={20} color="#FFFFFF" />
+                <Text style={styles.joinClanButtonText}>تقديم طلب الانضمام</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -168,5 +201,21 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     writingDirection: 'rtl',
     textAlign: 'right',
+  },
+  joinClanButton: {
+    backgroundColor: '#DC143C',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  joinClanButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    writingDirection: 'rtl',
   },
 });
