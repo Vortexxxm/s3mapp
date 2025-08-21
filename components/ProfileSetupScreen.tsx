@@ -68,13 +68,13 @@ export default function ProfileSetupScreen() {
       // Create the profile in the database
       const { error } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: session.user.id,
           username: username.trim(),
           age: parseInt(age),
           bio: bio.trim(),
           avatar_url: avatarUrl,
-        });
+        }, { onConflict: 'id' });
 
       if (error) throw error;
 

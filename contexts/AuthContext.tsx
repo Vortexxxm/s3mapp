@@ -82,19 +82,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No profile exists yet - this is expected for new users
-          console.log('No profile found for new user, will show setup screen');
-        } else {
-          console.error('Error fetching profile:', error);
-        }
+        console.error('Error fetching profile:', error);
         setProfile(null);
         return;
       }
       
+      // data will be null if no profile exists (expected for new users)
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
