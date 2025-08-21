@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
-  I18nManager,
 } from 'react-native';
 import { X, Calendar, User } from 'lucide-react-native';
 import { NewsItem } from '@/lib/supabase';
@@ -20,10 +19,6 @@ interface NewsDetailModalProps {
 }
 
 export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDetailModalProps) {
-  useEffect(() => {
-    I18nManager.forceRTL(true);
-  }, []);
-
   if (!newsItem) return null;
 
   const formatDate = (dateString: string) => {

@@ -10,9 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
-  I18nManager,
 } from 'react-native';
-import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {
@@ -21,10 +19,6 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
-
-  useEffect(() => {
-    I18nManager.forceRTL(true);
-  }, []);
 
   const handleAuth = async () => {
     if (!email || !password) {

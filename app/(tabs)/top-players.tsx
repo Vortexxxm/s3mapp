@@ -6,7 +6,6 @@ import {
   FlatList,
   RefreshControl,
   SafeAreaView,
-  I18nManager,
 } from 'react-native';
 import { Medal } from 'lucide-react-native';
 import { TopPlayer } from '@/lib/supabase';
@@ -20,7 +19,6 @@ export default function TopPlayersScreen() {
   const [lastPlayersCount, setLastPlayersCount] = useState(0);
 
   useEffect(() => {
-    I18nManager.forceRTL(true);
     setLastPlayersCount(topPlayers.length);
   }, []);
 
