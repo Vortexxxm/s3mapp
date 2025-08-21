@@ -12,6 +12,7 @@ import {
   Image,
   I18nManager,
 } from 'react-native';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {

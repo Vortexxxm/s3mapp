@@ -13,58 +13,34 @@ import {
   RefreshControl,
 } from 'react-native';
 import { UserPlus, Send, Clock, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
-import { supabase, ClanJoinRequest } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
+import AnimatedListItem from '@/components/AnimatedListItem';
+import UpdateToast from '@/components/UpdateToast';
 
 export default function ClanRequestsScreen() {
   const { session, profile } = useAuth();
+  const { clanRequests, requestsLoading, refreshClanRequests } = useData();
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [lastRequestsCount, setLastRequestsCount] = useState(0);
   const [freeFireUsername, setFreeFireUsername] = useState('');
   const [age, setAge] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
-  const [userRequests, setUserRequests] = useState<ClanJoinRequest[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     I18nManager.forceRTL(true);
-    fetchUserRequests();
-    setupRealtimeSubscription();
+    setLastRequestsCount(clanRequests.length);
   }, []);
 
-  const fetchUserRequests = async () => {
-    if (!session?.user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('clan_join_requests')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setUserRequests(data || []);
-    } catch (error) {
-      console.error('Error fetching user requests:', error);
+  // Show toast when requests are updated
+  useEffect(() => {
+    if (lastRequestsCount > 0 && clanRequests.length !== lastRequestsCount) {
+      setShowUpdateToast(true);
     }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const subscription = supabase
-      .channel('clan_requests_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'clan_join_requests' },
-        (payload) => {
-          console.log('Clan request change detected:', payload);
-          fetchUserRequests();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  };
+    setLastRequestsCount(clanRequests.length);
+  }, [clanRequests.length, lastRequestsCount]);
 
   const handleSubmitRequest = async () => {
     if (!freeFireUsername.trim() || !age.trim() || !reason.trim()) {
@@ -79,7 +55,7 @@ export default function ClanRequestsScreen() {
     }
 
     // Check if user already has a pending request
-    const hasPendingRequest = userRequests.some(req => req.status === 'pending');
+    const hasPendingRequest = clanRequests.some(req => req.status === 'pending' && req.user_id === session?.user?.id);
     if (hasPendingRequest) {
       Alert.alert('تنبيه', 'لديك طلب قيد المراجعة بالفعل. يرجى انتظار الرد على طلبك الحالي.');
       return;
@@ -106,18 +82,12 @@ export default function ClanRequestsScreen() {
       setReason('');
       
       // Refresh requests
-      fetchUserRequests();
+      refreshClanRequests();
     } catch (error: any) {
       Alert.alert('خطأ', error.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchUserRequests();
-    setRefreshing(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -148,34 +118,43 @@ export default function ClanRequestsScreen() {
   };
 
   const renderRequestItem = ({ item }: { item: ClanJoinRequest }) => (
-    <View style={styles.requestCard}>
-      <View style={styles.requestHeader}>
-        <View style={styles.statusContainer}>
-          {getStatusIcon(item.status)}
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {getStatusText(item.status)}
+    <AnimatedListItem>
+      <View style={styles.requestCard}>
+        <View style={styles.requestHeader}>
+          <View style={styles.statusContainer}>
+            {getStatusIcon(item.status)}
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {getStatusText(item.status)}
+            </Text>
+          </View>
+          <Text style={styles.requestDate}>
+            {new Date(item.created_at).toLocaleDateString('ar-SA')}
           </Text>
         </View>
-        <Text style={styles.requestDate}>
-          {new Date(item.created_at).toLocaleDateString('ar-SA')}
-        </Text>
-      </View>
-      
-      <View style={styles.requestDetails}>
-        <Text style={styles.requestLabel}>اسم المستخدم في فري فاير:</Text>
-        <Text style={styles.requestValue}>{item.free_fire_username}</Text>
         
-        <Text style={styles.requestLabel}>العمر:</Text>
-        <Text style={styles.requestValue}>{item.age} سنة</Text>
-        
-        <Text style={styles.requestLabel}>سبب الانضمام:</Text>
-        <Text style={styles.requestValue}>{item.reason}</Text>
+        <View style={styles.requestDetails}>
+          <Text style={styles.requestLabel}>اسم المستخدم في فري فاير:</Text>
+          <Text style={styles.requestValue}>{item.free_fire_username}</Text>
+          
+          <Text style={styles.requestLabel}>العمر:</Text>
+          <Text style={styles.requestValue}>{item.age} سنة</Text>
+          
+          <Text style={styles.requestLabel}>سبب الانضمام:</Text>
+          <Text style={styles.requestValue}>{item.reason}</Text>
+        </View>
       </View>
-    </View>
+    </AnimatedListItem>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <UpdateToast
+        message="تم تحديث حالة طلب الانضمام!"
+        type="info"
+        visible={showUpdateToast}
+        onHide={() => setShowUpdateToast(false)}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.headerTitle}>طلب الإنضمام للكلان</Text>
       </View>
@@ -183,7 +162,11 @@ export default function ClanRequestsScreen() {
       <ScrollView 
         style={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#DC143C" />
+          <RefreshControl 
+            refreshing={requestsLoading} 
+            onRefresh={refreshClanRequests} 
+            tintColor="#DC143C" 
+          />
         }
       >
         <View style={styles.formSection}>
@@ -243,13 +226,13 @@ export default function ClanRequestsScreen() {
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>طلباتي السابقة</Text>
           
-          {userRequests.length === 0 ? (
+          {clanRequests.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>لا توجد طلبات سابقة</Text>
             </View>
           ) : (
             <FlatList
-              data={userRequests}
+              data={clanRequests}
               renderItem={renderRequestItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}

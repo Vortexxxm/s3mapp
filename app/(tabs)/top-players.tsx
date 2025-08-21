@@ -9,53 +9,28 @@ import {
   I18nManager,
 } from 'react-native';
 import { Medal } from 'lucide-react-native';
-import { supabase, TopPlayer } from '@/lib/supabase';
+import { TopPlayer } from '@/lib/supabase';
+import { useData } from '@/contexts/DataContext';
+import AnimatedListItem from '@/components/AnimatedListItem';
+import UpdateToast from '@/components/UpdateToast';
 
 export default function TopPlayersScreen() {
-  const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { topPlayers, playersLoading, refreshTopPlayers } = useData();
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [lastPlayersCount, setLastPlayersCount] = useState(0);
 
   useEffect(() => {
     I18nManager.forceRTL(true);
-    fetchTopPlayers();
-    setupRealtimeSubscription();
+    setLastPlayersCount(topPlayers.length);
   }, []);
 
-  const fetchTopPlayers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('top_players')
-        .select('*')
-        .order('mvp_points', { ascending: false });
-
-      if (error) throw error;
-      setTopPlayers(data || []);
-    } catch (error) {
-      console.error('Error fetching top players:', error);
-    } finally {
-      setLoading(false);
+  // Show toast when top players are updated
+  useEffect(() => {
+    if (lastPlayersCount > 0 && topPlayers.length !== lastPlayersCount) {
+      setShowUpdateToast(true);
     }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const playersSubscription = supabase
-      .channel('top_players_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'top_players' },
-        (payload) => {
-          console.log('Top players change detected:', payload);
-          // Refresh top players data when any change occurs
-          fetchTopPlayers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      playersSubscription.unsubscribe();
-    };
-  };
+    setLastPlayersCount(topPlayers.length);
+  }, [topPlayers.length, lastPlayersCount]);
 
   const renderTopPlayerItem = ({ item }: { item: TopPlayer }) => {
     const getPositionColor = (index: number) => {
@@ -68,29 +43,38 @@ export default function TopPlayersScreen() {
     };
 
     return ({ index }: { index: number }) => (
-      <View style={styles.playerCard}>
-        <View style={styles.positionContainer}>
-          <Text style={[styles.position, { color: getPositionColor(index) }]}>
-            #{index + 1}
-          </Text>
-          {index < 3 && (
-            <Medal size={24} color={getPositionColor(index)} />
-          )}
+      <AnimatedListItem delay={index * 100}>
+        <View style={styles.playerCard}>
+          <View style={styles.positionContainer}>
+            <Text style={[styles.position, { color: getPositionColor(index) }]}>
+              #{index + 1}
+            </Text>
+            {index < 3 && (
+              <Medal size={24} color={getPositionColor(index)} />
+            )}
+          </View>
+          
+          <View style={styles.playerInfo}>
+            <Text style={styles.username}>
+              {item.player_name}
+            </Text>
+            <Text style={styles.teamName}>{item.team_name} • {item.position}</Text>
+            <Text style={styles.mvpPoints}>{item.mvp_points} MVP Points</Text>
+          </View>
         </View>
-        
-        <View style={styles.playerInfo}>
-          <Text style={styles.username}>
-            {item.player_name}
-          </Text>
-          <Text style={styles.teamName}>{item.team_name} • {item.position}</Text>
-          <Text style={styles.mvpPoints}>{item.mvp_points} MVP Points</Text>
-        </View>
-      </View>
+      </AnimatedListItem>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <UpdateToast
+        message="تم تحديث ترتيب أفضل لاعب!"
+        type="success"
+        visible={showUpdateToast}
+        onHide={() => setShowUpdateToast(false)}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.headerTitle}>أفضل لاعب</Text>
         <Text style={styles.headerSubtitle}>ترتيب أفضل لاعب</Text>
@@ -102,8 +86,8 @@ export default function TopPlayersScreen() {
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
-            onRefresh={fetchTopPlayers}
+            refreshing={playersLoading}
+            onRefresh={refreshTopPlayers}
             tintColor="#FFD700"
           />
         }

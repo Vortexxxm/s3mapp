@@ -15,18 +15,28 @@ import {
 } from 'react-native';
 import { Settings, Plus, CreditCard as Edit3, Trash2, Save, X, Camera, Users, Trophy, Medal, Star } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, Profile } from '@/lib/supabase';
+import { supabase, Profile } from '@/lib/supabase';
+import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 type AdminSection = 'news' | 'leaderboard' | 'players' | 'awards' | 'users';
 
 export default function AdminScreen() {
   const { profile } = useAuth();
+  const { 
+    news, 
+    leaderboard, 
+    topPlayers, 
+    awards, 
+    refreshNews, 
+    refreshLeaderboard, 
+    refreshTopPlayers, 
+    refreshAwards,
+    refreshAll 
+  } = useData();
   const [activeSection, setActiveSection] = useState<AdminSection>('news');
   const [loading, setLoading] = useState(false);
 
-  // News management
-  const [news, setNews] = useState<NewsItem[]>([]);
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [newsForm, setNewsForm] = useState({
@@ -37,8 +47,6 @@ export default function AdminScreen() {
     video_url: '',
   });
 
-  // Leaderboard management
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [editingLeaderboard, setEditingLeaderboard] = useState<LeaderboardEntry | null>(null);
   const [leaderboardForm, setLeaderboardForm] = useState({
@@ -47,8 +55,6 @@ export default function AdminScreen() {
     points: '',
   });
 
-  // Top players management
-  const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
   const [showPlayersModal, setShowPlayersModal] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<TopPlayer | null>(null);
   const [playerForm, setPlayerForm] = useState({
@@ -58,8 +64,6 @@ export default function AdminScreen() {
     mvp_points: '',
   });
 
-  // Special awards management
-  const [awards, setAwards] = useState<SpecialAward[]>([]);
   const [showAwardsModal, setShowAwardsModal] = useState(false);
   const [editingAward, setEditingAward] = useState<SpecialAward | null>(null);
   const [awardForm, setAwardForm] = useState({
@@ -85,71 +89,8 @@ export default function AdminScreen() {
 
   useEffect(() => {
     I18nManager.forceRTL(true);
-    fetchAllData();
-    setupRealtimeSubscriptions();
+    // Data is already being fetched by DataProvider
   }, []);
-
-  const fetchAllData = async () => {
-    await Promise.all([
-      fetchNews(),
-      fetchLeaderboard(),
-      fetchTopPlayers(),
-      fetchAwards(),
-      fetchUsers(),
-    ]);
-  };
-
-  const fetchNews = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('news')
-        .select('*, profiles:author_id (username)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setNews(data || []);
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    }
-  };
-
-  const fetchLeaderboard = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('rank', { ascending: true });
-      if (error) throw error;
-      setLeaderboard(data || []);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    }
-  };
-
-  const fetchTopPlayers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('top_players')
-        .select('*')
-        .order('mvp_points', { ascending: false });
-      if (error) throw error;
-      setTopPlayers(data || []);
-    } catch (error) {
-      console.error('Error fetching top players:', error);
-    }
-  };
-
-  const fetchAwards = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('special_awards')
-        .select('*, profiles:user_id (username)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setAwards(data || []);
-    } catch (error) {
-      console.error('Error fetching awards:', error);
-    }
-  };
 
   const fetchUsers = async () => {
     try {
@@ -162,46 +103,6 @@ export default function AdminScreen() {
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
-
-  const setupRealtimeSubscriptions = () => {
-    // News subscription
-    const newsSubscription = supabase
-      .channel('admin_news_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, fetchNews)
-      .subscribe();
-
-    // Leaderboard subscription
-    const leaderboardSubscription = supabase
-      .channel('admin_leaderboard_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaderboard' }, fetchLeaderboard)
-      .subscribe();
-
-    // Top players subscription
-    const playersSubscription = supabase
-      .channel('admin_players_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'top_players' }, fetchTopPlayers)
-      .subscribe();
-
-    // Awards subscription
-    const awardsSubscription = supabase
-      .channel('admin_awards_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'special_awards' }, fetchAwards)
-      .subscribe();
-
-    // Users subscription
-    const usersSubscription = supabase
-      .channel('admin_users_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchUsers)
-      .subscribe();
-
-    return () => {
-      newsSubscription.unsubscribe();
-      leaderboardSubscription.unsubscribe();
-      playersSubscription.unsubscribe();
-      awardsSubscription.unsubscribe();
-      usersSubscription.unsubscribe();
-    };
   };
 
   const pickImage = async (callback: (uri: string) => void) => {
@@ -256,6 +157,9 @@ export default function AdminScreen() {
 
       resetNewsForm();
       Alert.alert('نجح', editingNews ? 'تم تحديث الخبر' : 'تم إضافة الخبر');
+      
+      // Refresh news data to ensure consistency
+      refreshNews();
     } catch (error: any) {
       Alert.alert('خطأ', error.message);
     } finally {
@@ -277,6 +181,7 @@ export default function AdminScreen() {
               const { error } = await supabase.from('news').delete().eq('id', id);
               if (error) throw error;
               Alert.alert('نجح', 'تم حذف الخبر');
+              refreshNews();
             } catch (error: any) {
               Alert.alert('خطأ', error.message);
             }
@@ -322,6 +227,9 @@ export default function AdminScreen() {
 
       resetLeaderboardForm();
       Alert.alert('نجح', editingLeaderboard ? 'تم تحديث الترتيب' : 'تم إضافة الفريق');
+      
+      // Refresh leaderboard data to ensure consistency
+      refreshLeaderboard();
     } catch (error: any) {
       Alert.alert('خطأ', error.message);
     } finally {
@@ -343,6 +251,7 @@ export default function AdminScreen() {
               const { error } = await supabase.from('leaderboard').delete().eq('id', id);
               if (error) throw error;
               Alert.alert('نجح', 'تم حذف الفريق');
+              refreshLeaderboard();
             } catch (error: any) {
               Alert.alert('خطأ', error.message);
             }
@@ -389,6 +298,9 @@ export default function AdminScreen() {
 
       resetPlayerForm();
       Alert.alert('نجح', editingPlayer ? 'تم تحديث اللاعب' : 'تم إضافة اللاعب');
+      
+      // Refresh players data to ensure consistency
+      refreshTopPlayers();
     } catch (error: any) {
       Alert.alert('خطأ', error.message);
     } finally {
@@ -410,6 +322,7 @@ export default function AdminScreen() {
               const { error } = await supabase.from('top_players').delete().eq('id', id);
               if (error) throw error;
               Alert.alert('نجح', 'تم حذف اللاعب');
+              refreshTopPlayers();
             } catch (error: any) {
               Alert.alert('خطأ', error.message);
             }
@@ -459,6 +372,9 @@ export default function AdminScreen() {
 
       resetAwardForm();
       Alert.alert('نجح', editingAward ? 'تم تحديث الجائزة' : 'تم إضافة الجائزة');
+      
+      // Refresh awards data to ensure consistency
+      refreshAwards();
     } catch (error: any) {
       Alert.alert('خطأ', error.message);
     } finally {
@@ -480,6 +396,7 @@ export default function AdminScreen() {
               const { error } = await supabase.from('special_awards').delete().eq('id', id);
               if (error) throw error;
               Alert.alert('نجح', 'تم حذف الجائزة');
+              refreshAwards();
             } catch (error: any) {
               Alert.alert('خطأ', error.message);
             }

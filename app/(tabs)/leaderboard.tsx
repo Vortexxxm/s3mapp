@@ -9,53 +9,28 @@ import {
   I18nManager,
 } from 'react-native';
 import { Trophy } from 'lucide-react-native';
-import { supabase, LeaderboardEntry } from '@/lib/supabase';
+import { LeaderboardEntry } from '@/lib/supabase';
+import { useData } from '@/contexts/DataContext';
+import AnimatedListItem from '@/components/AnimatedListItem';
+import UpdateToast from '@/components/UpdateToast';
 
 export default function LeaderboardScreen() {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { leaderboard, leaderboardLoading, refreshLeaderboard } = useData();
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [lastLeaderboardCount, setLastLeaderboardCount] = useState(0);
 
   useEffect(() => {
     I18nManager.forceRTL(true);
-    fetchLeaderboard();
-    setupRealtimeSubscription();
+    setLastLeaderboardCount(leaderboard.length);
   }, []);
 
-  const fetchLeaderboard = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .order('rank', { ascending: true });
-
-      if (error) throw error;
-      setLeaderboard(data || []);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    } finally {
-      setLoading(false);
+  // Show toast when leaderboard is updated
+  useEffect(() => {
+    if (lastLeaderboardCount > 0 && leaderboard.length !== lastLeaderboardCount) {
+      setShowUpdateToast(true);
     }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const leaderboardSubscription = supabase
-      .channel('leaderboard_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'leaderboard' },
-        (payload) => {
-          console.log('Leaderboard change detected:', payload);
-          // Refresh leaderboard data when any change occurs
-          fetchLeaderboard();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      leaderboardSubscription.unsubscribe();
-    };
-  };
+    setLastLeaderboardCount(leaderboard.length);
+  }, [leaderboard.length, lastLeaderboardCount]);
 
   const renderLeaderboardItem = ({ item, index }: { item: LeaderboardEntry; index: number }) => {
     const getRankColor = (rank: number) => {
@@ -68,28 +43,37 @@ export default function LeaderboardScreen() {
     };
 
     return (
-      <View style={styles.leaderboardCard}>
-        <View style={styles.rankContainer}>
-          <Text style={[styles.rank, { color: getRankColor(item.rank) }]}>
-            #{item.rank}
-          </Text>
-          {item.rank <= 3 && (
-            <Trophy size={20} color={getRankColor(item.rank)} />
-          )}
+      <AnimatedListItem delay={index * 100}>
+        <View style={styles.leaderboardCard}>
+          <View style={styles.rankContainer}>
+            <Text style={[styles.rank, { color: getRankColor(item.rank) }]}>
+              #{item.rank}
+            </Text>
+            {item.rank <= 3 && (
+              <Trophy size={20} color={getRankColor(item.rank)} />
+            )}
+          </View>
+          
+          <View style={styles.playerInfo}>
+            <Text style={styles.username}>
+              {item.team_name}
+            </Text>
+            <Text style={styles.points}>{item.points} points</Text>
+          </View>
         </View>
-        
-        <View style={styles.playerInfo}>
-          <Text style={styles.username}>
-            {item.team_name}
-          </Text>
-          <Text style={styles.points}>{item.points} points</Text>
-        </View>
-      </View>
+      </AnimatedListItem>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <UpdateToast
+        message="تم تحديث ترتيب المتصدرين!"
+        type="success"
+        visible={showUpdateToast}
+        onHide={() => setShowUpdateToast(false)}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.headerTitle}>المتصدّرون</Text>
       </View>
@@ -100,8 +84,8 @@ export default function LeaderboardScreen() {
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
-            onRefresh={fetchLeaderboard}
+            refreshing={leaderboardLoading}
+            onRefresh={refreshLeaderboard}
             tintColor="#FFD700"
           />
         }

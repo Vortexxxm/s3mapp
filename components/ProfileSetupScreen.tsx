@@ -11,6 +11,7 @@ import {
   Image,
   I18nManager,
 } from 'react-native';
+import { useEffect } from 'react';
 import { Camera, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';

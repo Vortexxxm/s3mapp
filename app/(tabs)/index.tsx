@@ -11,59 +11,31 @@ import {
   I18nManager,
 } from 'react-native';
 import { Calendar, User, ChevronRight } from 'lucide-react-native';
-import { supabase, NewsItem } from '@/lib/supabase';
+import { NewsItem } from '@/lib/supabase';
+import { useData } from '@/contexts/DataContext';
 import NewsDetailModal from '@/components/NewsDetailModal';
+import AnimatedListItem from '@/components/AnimatedListItem';
+import UpdateToast from '@/components/UpdateToast';
 
 export default function HomeScreen() {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { news, newsLoading, refreshNews } = useData();
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [lastNewsCount, setLastNewsCount] = useState(0);
 
   useEffect(() => {
     I18nManager.forceRTL(true);
-    fetchNews();
-    setupRealtimeSubscription();
+    setLastNewsCount(news.length);
   }, []);
 
-  const fetchNews = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('news')
-        .select(`
-          *,
-          profiles:author_id (username)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setNews(data || []);
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    } finally {
-      setLoading(false);
+  // Show toast when new news is added
+  useEffect(() => {
+    if (lastNewsCount > 0 && news.length > lastNewsCount) {
+      setShowUpdateToast(true);
     }
-  };
-
-  const setupRealtimeSubscription = () => {
-    const newsSubscription = supabase
-      .channel('news_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'news' },
-        (payload) => {
-          console.log('News change detected:', payload);
-          // Refresh news data when any change occurs
-          fetchNews();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      newsSubscription.unsubscribe();
-    };
-  };
+    setLastNewsCount(news.length);
+  }, [news.length, lastNewsCount]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -91,47 +63,56 @@ export default function HomeScreen() {
   };
 
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
-    <TouchableOpacity 
-      style={styles.newsCard} 
-      onPress={() => handleNewsPress(item)}
-      activeOpacity={0.7}
-    >
-      {item.image_url && (
-        <Image source={{ uri: item.image_url }} style={styles.newsImage} />
-      )}
-      
-      <View style={styles.newsContent}>
-        <Text style={styles.newsTitle}>{item.title}</Text>
+    <AnimatedListItem delay={0}>
+      <TouchableOpacity 
+        style={styles.newsCard} 
+        onPress={() => handleNewsPress(item)}
+        activeOpacity={0.7}
+      >
+        {item.image_url && (
+          <Image source={{ uri: item.image_url }} style={styles.newsImage} />
+        )}
         
-        <View style={styles.newsMetaInfo}>
-          <View style={styles.metaItem}>
-            <Calendar size={14} color="#DC143C" />
-            <Text style={styles.metaText}>
-              {formatDate(item.created_at).date} at {formatDate(item.created_at).time}
-            </Text>
+        <View style={styles.newsContent}>
+          <Text style={styles.newsTitle}>{item.title}</Text>
+          
+          <View style={styles.newsMetaInfo}>
+            <View style={styles.metaItem}>
+              <Calendar size={14} color="#DC143C" />
+              <Text style={styles.metaText}>
+                {formatDate(item.created_at).date} at {formatDate(item.created_at).time}
+              </Text>
+            </View>
+            <View style={styles.metaItem}>
+              <User size={14} color="#DC143C" />
+              <Text style={styles.metaText}>
+                {item.profiles?.username || 'مشرف S3M'}
+              </Text>
+            </View>
           </View>
-          <View style={styles.metaItem}>
-            <User size={14} color="#DC143C" />
-            <Text style={styles.metaText}>
-              {item.profiles?.username || 'مشرف S3M'}
-            </Text>
+          
+          <Text style={styles.newsDescription}>
+            {truncateText(item.content)}
+          </Text>
+          
+          <View style={styles.readMoreContainer}>
+            <ChevronRight size={16} color="#DC143C" />
+            <Text style={styles.readMoreText}>اقرأ المزيد</Text>
           </View>
         </View>
-        
-        <Text style={styles.newsDescription}>
-          {truncateText(item.content)}
-        </Text>
-        
-        <View style={styles.readMoreContainer}>
-          <ChevronRight size={16} color="#DC143C" />
-          <Text style={styles.readMoreText}>اقرأ المزيد</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </AnimatedListItem>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <UpdateToast
+        message="تم إضافة خبر جديد!"
+        type="info"
+        visible={showUpdateToast}
+        onHide={() => setShowUpdateToast(false)}
+      />
+      
       <View style={styles.header}>
         <Text style={styles.headerTitle}>أخبار S3M HUB</Text>
       </View>
@@ -142,8 +123,8 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
-            refreshing={loading}
-            onRefresh={fetchNews}
+            refreshing={newsLoading}
+            onRefresh={refreshNews}
             tintColor="#FFD700"
           />
         }

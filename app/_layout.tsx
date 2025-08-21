@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { DataProvider } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import SplashScreen from '@/components/SplashScreen';
@@ -76,7 +77,9 @@ export default function RootLayout() {
   return (
     <>
       <AuthProvider>
-        <AppContent />
+        <DataProvider>
+          <AppContent />
+        </DataProvider>
       </AuthProvider>
       <StatusBar style="light" />
     </>
