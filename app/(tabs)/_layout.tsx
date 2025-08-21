@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Trophy, Medal, User, Settings, UserPlus } from 'lucide-react-native';
+import { Chrome as Home, Trophy, Medal, User, Settings, Crown, Bell } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
 import RealtimeIndicator from '@/components/RealtimeIndicator';
@@ -73,11 +73,20 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="clan-requests"
+          name="leader-awards"
           options={{
-            title: 'طلب الإنضمام',
+            title: 'أفضل زعيم',
             tabBarIcon: ({ size, color }) => (
-              <UserPlus size={size} color={color} />
+              <Crown size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="notifications"
+          options={{
+            title: 'الإشعارات',
+            tabBarIcon: ({ size, color }) => (
+              <Bell size={size} color={color} />
             ),
           }}
         />
