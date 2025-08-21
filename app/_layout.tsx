@@ -26,7 +26,7 @@ function AppContent() {
   }
 
   // Check if profile setup is needed
-  if (session && (!profile?.username || !profile?.avatar_url)) {
+  if (session && (!profile || !profile.username || !profile.avatar_url)) {
     return <ProfileSetupScreen />;
   }
 

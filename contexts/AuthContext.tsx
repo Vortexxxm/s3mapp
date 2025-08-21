@@ -93,11 +93,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // If no profile exists yet, set profile to null
+        // This will trigger the ProfileSetupScreen
+        console.log('No profile found, will show setup screen');
+        setProfile(null);
+        return;
+      }
+      
       setProfile(data);
     } catch (error) {
-      // If no profile exists yet, set profile to null
-      // This will trigger the ProfileSetupScreen
+      console.error('Error fetching profile:', error);
       setProfile(null);
     }
   };

@@ -13,6 +13,7 @@ import {
 import { Camera, User } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileSetupScreen() {
   const [username, setUsername] = useState('');
@@ -60,14 +61,35 @@ export default function ProfileSetupScreen() {
 
     setLoading(true);
     try {
+      const { session } = useAuth();
+      if (!session?.user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Create the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: session.user.id,
+          username: username.trim(),
+          age: parseInt(age),
+          bio: bio.trim(),
+          avatar_url: avatarUrl,
+        });
+
+      if (error) throw error;
+
+      // Update the local profile state
       await updateProfile({
         username: username.trim(),
         age: parseInt(age),
         bio: bio.trim(),
         avatar_url: avatarUrl,
       });
-      Alert.alert('Success', 'Profile setup completed!');
+      
+      // No need for alert, the app will automatically navigate to main screens
     } catch (error: any) {
+      console.error('Profile setup error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
