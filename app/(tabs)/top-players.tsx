@@ -24,11 +24,8 @@ export default function TopPlayersScreen() {
     try {
       const { data, error } = await supabase
         .from('top_players')
-        .select(`
-          *,
-          profiles:user_id (username, avatar_url)
-        `)
-        .order('position', { ascending: true });
+        .select('*')
+        .order('mvp_points', { ascending: false });
 
       if (error) throw error;
       setTopPlayers(data || []);
@@ -57,8 +54,8 @@ export default function TopPlayersScreen() {
   };
 
   const renderTopPlayerItem = ({ item }: { item: TopPlayer }) => {
-    const getPositionColor = (position: number) => {
-      switch (position) {
+    const getPositionColor = (index: number) => {
+      switch (index + 1) {
         case 1: return '#FFD700'; // Gold
         case 2: return '#C0C0C0'; // Silver
         case 3: return '#CD7F32'; // Bronze
@@ -66,21 +63,22 @@ export default function TopPlayersScreen() {
       }
     };
 
-    return (
+    return ({ index }: { index: number }) => (
       <View style={styles.playerCard}>
         <View style={styles.positionContainer}>
-          <Text style={[styles.position, { color: getPositionColor(item.position) }]}>
-            #{item.position}
+          <Text style={[styles.position, { color: getPositionColor(index) }]}>
+            #{index + 1}
           </Text>
-          {item.position <= 3 && (
-            <Medal size={24} color={getPositionColor(item.position)} />
+          {index < 3 && (
+            <Medal size={24} color={getPositionColor(index)} />
           )}
         </View>
         
         <View style={styles.playerInfo}>
           <Text style={styles.username}>
-            {item.profiles?.username || 'Unknown Player'}
+            {item.player_name}
           </Text>
+          <Text style={styles.teamName}>{item.team_name} • {item.position}</Text>
           <Text style={styles.mvpPoints}>{item.mvp_points} MVP Points</Text>
         </View>
       </View>
@@ -96,7 +94,7 @@ export default function TopPlayersScreen() {
       
       <FlatList
         data={topPlayers}
-        renderItem={renderTopPlayerItem}
+        renderItem={({ item, index }) => renderTopPlayerItem({ item })({ index })}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl
@@ -167,6 +165,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 6,
+  },
+  teamName: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    marginBottom: 4,
   },
   mvpPoints: {
     fontSize: 18,

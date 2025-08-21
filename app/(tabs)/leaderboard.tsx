@@ -24,10 +24,7 @@ export default function LeaderboardScreen() {
     try {
       const { data, error } = await supabase
         .from('leaderboard')
-        .select(`
-          *,
-          profiles:user_id (username, avatar_url)
-        `)
+        .select('*')
         .order('rank', { ascending: true });
 
       if (error) throw error;
@@ -79,7 +76,7 @@ export default function LeaderboardScreen() {
         
         <View style={styles.playerInfo}>
           <Text style={styles.username}>
-            {item.profiles?.username || 'Unknown Player'}
+            {item.team_name}
           </Text>
           <Text style={styles.points}>{item.points} points</Text>
         </View>

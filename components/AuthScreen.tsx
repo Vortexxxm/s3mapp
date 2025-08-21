@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,11 +18,12 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
   const handleAuth = async () => {
-    if (!email || !password || (isSignUp && !username)) {
+    if (!email || !password || (isSignUp && (!username || !age))) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -29,7 +31,7 @@ export default function AuthScreen() {
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUp(email, password, username);
+        await signUp(email, password, username, parseInt(age));
         Alert.alert('Success', 'Account created successfully!');
       } else {
         await signIn(email, password);
@@ -48,6 +50,11 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.logo}>S3M HUB</Text>
           <Text style={styles.subtitle}>
             {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -63,6 +70,16 @@ export default function AuthScreen() {
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
+            />
+          )}
+          {isSignUp && (
+            <TextInput
+              style={styles.input}
+              placeholder="Age"
+              placeholderTextColor="#666"
+              value={age}
+              onChangeText={setAge}
+              keyboardType="numeric"
             />
           )}
           <TextInput
@@ -122,6 +139,12 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+    borderRadius: 40,
   },
   logo: {
     fontSize: 36,

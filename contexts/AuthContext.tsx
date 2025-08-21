@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, Profile } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import * as SecureStore from 'expo-secure-store';
 
 interface AuthContextType {
   session: Session | null;
@@ -9,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, username: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
@@ -20,31 +22,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    initializeAuth();
+  }, []);
 
-    // Listen for auth changes
+  const initializeAuth = async () => {
+    try {
+      // Check for stored session
+      const storedSession = await SecureStore.getItemAsync('supabase-session');
+      
+      if (storedSession) {
+        const parsedSession = JSON.parse(storedSession);
+        await supabase.auth.setSession(parsedSession);
+      }
+
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
+    } catch (error) {
+      console.error('Error initializing auth:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
+      
+      // Store or remove session
+      if (session) {
+        await SecureStore.setItemAsync('supabase-session', JSON.stringify(session));
+        await fetchProfile(session.user.id);
+      } else {
+        await SecureStore.deleteItemAsync('supabase-session');
+        setProfile(null);
+      }
+      
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -95,9 +121,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    await SecureStore.deleteItemAsync('supabase-session');
     await supabase.auth.signOut();
   };
 
+  const changePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) throw error;
+  };
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!session?.user) return;
 
@@ -120,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signIn,
         signOut,
+        changePassword,
         updateProfile,
       }}
     >

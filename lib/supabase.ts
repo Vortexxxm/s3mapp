@@ -11,14 +11,19 @@ export type Profile = {
   username: string;
   role: 'user' | 'admin';
   avatar_url?: string;
+  age?: number;
+  bio?: string;
   created_at: string;
+  updated_at: string;
 };
 
 export type NewsItem = {
   id: string;
   title: string;
   content: string;
-  author_id: string;
+  image_url?: string;
+  video_url?: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
   profiles?: Profile;
@@ -26,18 +31,44 @@ export type NewsItem = {
 
 export type LeaderboardEntry = {
   id: string;
-  user_id: string;
+  team_name: string;
   rank: number;
   points: number;
+  created_at: string;
   updated_at: string;
-  profiles?: Profile;
 };
 
 export type TopPlayer = {
   id: string;
-  user_id: string;
+  player_name: string;
+  team_name: string;
+  position: string;
   mvp_points: number;
-  position: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SpecialAward = {
+  id: string;
+  award_type: 'player_of_week' | 'player_of_month' | 'leader_of_week';
+  user_id?: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  week_number?: number;
+  month_number?: number;
+  year: number;
+  created_at: string;
   updated_at: string;
   profiles?: Profile;
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'news' | 'award' | 'leaderboard';
+  read: boolean;
+  created_at: string;
 };

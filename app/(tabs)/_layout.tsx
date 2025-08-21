@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import PagerView from 'react-native-pager-view';
 import { Chrome as Home, Trophy, Medal, User, Settings } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,10 +14,20 @@ export default function TabLayout() {
           backgroundColor: '#1a1a1a',
           borderTopColor: '#3a3a3a',
           borderTopWidth: 1,
+          paddingBottom: 8,
+          height: 88,
         },
         tabBarActiveTintColor: '#FFD700',
         tabBarInactiveTintColor: '#666',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
       }}
+      tabBarPosition="bottom"
     >
       <Tabs.Screen
         name="index"
