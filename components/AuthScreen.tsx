@@ -17,13 +17,11 @@ export default function AuthScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [age, setAge] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
   const handleAuth = async () => {
-    if (!email || !password || (isSignUp && (!username || !age))) {
+    if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -31,7 +29,7 @@ export default function AuthScreen() {
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUp(email, password, username, parseInt(age));
+        await signUp(email, password);
         Alert.alert('Success', 'Account created successfully!');
       } else {
         await signIn(email, password);
@@ -50,36 +48,17 @@ export default function AuthScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
-          <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoIcon}>S3M</Text>
-          </View>
-          <Text style={styles.logo}>S3M HUB</Text>
+          <Image 
+            source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')} 
+            style={styles.logo}
+          />
+          <Text style={styles.title}>S3M HUB</Text>
           <Text style={styles.subtitle}>
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </Text>
         </View>
 
         <View style={styles.formContainer}>
-          {isSignUp && (
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              placeholderTextColor="#666"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-          )}
-          {isSignUp && (
-            <TextInput
-              style={styles.input}
-              placeholder="Age"
-              placeholderTextColor="#666"
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-            />
-          )}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -127,7 +106,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0a0a0a',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -138,24 +117,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoPlaceholder: {
+  logo: {
     width: 80,
     height: 80,
-    backgroundColor: '#FFD700',
     borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
   },
-  logoIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  logo: {
+  title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#DC143C',
     marginBottom: 8,
   },
   subtitle: {
@@ -167,17 +138,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     color: '#FFFFFF',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#3a3a3a',
+    borderColor: '#333',
   },
   button: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#DC143C',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -187,7 +158,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -196,7 +167,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   switchText: {
-    color: '#FFD700',
+    color: '#DC143C',
     fontSize: 16,
   },
 });

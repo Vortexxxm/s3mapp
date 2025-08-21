@@ -113,18 +113,18 @@ export default function TopPlayersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0a0a0a',
   },
   header: {
     padding: 20,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3a3a',
+    borderBottomColor: '#333',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#DC143C',
     textAlign: 'center',
   },
   headerSubtitle: {
@@ -137,14 +137,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   playerCard: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#3a3a3a',
+    borderColor: '#333',
   },
   positionContainer: {
     flexDirection: 'row',
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   mvpPoints: {
     fontSize: 18,
-    color: '#FFD700',
+    color: '#DC143C',
     fontWeight: '500',
   },
 });

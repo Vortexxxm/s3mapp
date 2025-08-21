@@ -315,7 +315,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0a0a0a',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3a3a',
+    borderBottomColor: '#333',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#DC143C',
     textAlign: 'center',
   },
   profileContainer: {
@@ -345,11 +345,11 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFD700',
+    borderColor: '#DC143C',
     position: 'relative',
   },
   avatar: {
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#DC143C',
     borderRadius: 16,
     width: 32,
     height: 32,
@@ -384,24 +384,24 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontSize: 18,
     color: '#FFFFFF',
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3a3a3a',
+    borderColor: '#333',
   },
   roleText: {
-    color: '#FFD700',
+    color: '#DC143C',
     fontWeight: 'bold',
   },
   input: {
     fontSize: 18,
     color: '#FFFFFF',
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#FFD700',
+    borderColor: '#DC143C',
   },
   textArea: {
     height: 80,
@@ -422,27 +422,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   editButton: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderWidth: 2,
-    borderColor: '#FFD700',
+    borderColor: '#DC143C',
   },
   editButtonText: {
-    color: '#FFD700',
+    color: '#DC143C',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
   saveButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#DC143C',
   },
   saveButtonText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
   cancelButton: {
-    backgroundColor: '#3a3a3a',
+    backgroundColor: '#333',
   },
   cancelButtonText: {
     color: '#FFFFFF',
@@ -450,18 +450,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   passwordButton: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderWidth: 2,
-    borderColor: '#FFD700',
+    borderColor: '#DC143C',
   },
   passwordButtonText: {
-    color: '#FFD700',
+    color: '#DC143C',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
   signOutButton: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderWidth: 2,
     borderColor: '#FF4444',
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderRadius: 16,
     padding: 24,
     width: '90%',

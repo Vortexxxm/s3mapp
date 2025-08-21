@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import SplashScreen from '@/components/SplashScreen';
 import AuthScreen from '@/components/AuthScreen';
+import ProfileSetupScreen from '@/components/ProfileSetupScreen';
 
 function AppContent() {
   const { session, loading } = useAuth();
@@ -22,6 +23,12 @@ function AppContent() {
 
   if (!session) {
     return <AuthScreen />;
+  }
+
+  // Check if profile setup is needed
+  const { profile } = useAuth();
+  if (session && (!profile?.username || !profile?.avatar_url)) {
+    return <ProfileSetupScreen />;
   }
 
   return (

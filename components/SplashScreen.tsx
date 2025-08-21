@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Image } from 'react-native';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -27,8 +27,12 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <Text style={styles.logo}>S3M</Text>
-        <Text style={styles.hub}>HUB</Text>
+        <Image 
+          source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')} 
+          style={styles.logo}
+        />
+        <Text style={styles.title}>S3M HUB</Text>
+        <Text style={styles.subtitle}>E-SPORTS</Text>
       </Animated.View>
     </View>
   );
@@ -37,7 +41,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -45,16 +49,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    letterSpacing: 2,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 20,
   },
-  hub: {
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#DC143C',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  subtitle: {
     fontSize: 24,
     fontWeight: '300',
     color: '#FFFFFF',
-    letterSpacing: 4,
-    marginTop: 8,
+    letterSpacing: 6,
   },
 });

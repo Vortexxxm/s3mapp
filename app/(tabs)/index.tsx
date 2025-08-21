@@ -97,30 +97,30 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0a0a0a',
   },
   header: {
     padding: 20,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3a3a',
+    borderBottomColor: '#333',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFD700',
+    color: '#DC143C',
     textAlign: 'center',
   },
   listContainer: {
     padding: 20,
   },
   newsCard: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#3a3a3a',
+    borderColor: '#333',
   },
   newsTitle: {
     fontSize: 20,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   },
   newsAuthor: {
     fontSize: 14,
-    color: '#FFD700',
+    color: '#DC143C',
     fontWeight: '500',
   },
   newsDate: {
