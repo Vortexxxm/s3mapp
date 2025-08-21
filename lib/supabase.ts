@@ -22,6 +22,10 @@ const isValidKey = (key: string | undefined): boolean => {
   return !!(key && !key.includes('your_supabase_anon_key_here') && !key.includes('placeholder') && key.length > 20);
 };
 
+// Declare exports at top level
+export let supabase: ReturnType<typeof createClient>;
+export let supabaseAdmin: ReturnType<typeof createClient>;
+
 if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   console.error('⚠️  Supabase configuration missing or invalid. Please update your .env file with actual Supabase credentials.');
   console.error('Required environment variables:');
@@ -32,11 +36,11 @@ if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   const dummyUrl = 'https://dummy.supabase.co';
   const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.dummy';
   
-  export const supabase = createClient(dummyUrl, dummyKey);
-  export const supabaseAdmin = supabase;
+  supabase = createClient(dummyUrl, dummyKey);
+  supabaseAdmin = supabase;
 } else {
-  export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
-  export const supabaseAdmin = supabaseServiceKey && isValidKey(supabaseServiceKey)
+  supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+  supabaseAdmin = supabaseServiceKey && isValidKey(supabaseServiceKey)
     ? createClient(supabaseUrl!, supabaseServiceKey)
     : supabase;
 }
