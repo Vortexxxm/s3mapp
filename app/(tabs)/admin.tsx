@@ -15,8 +15,10 @@ import {
 import { Plus, CreditCard as Edit3, Trash2, Users, Trophy, Award, Newspaper as News } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase, supabaseAdmin, NewsItem, LeaderboardEntry, TopPlayer, Profile } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminScreen() {
+  const { session } = useAuth();
   const [activeTab, setActiveTab] = useState('news');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
@@ -142,6 +144,7 @@ export default function AdminScreen() {
             title: newsTitle,
             content: newsContent,
             image_url: newsImage || null,
+            author_id: session?.user?.id || null,
           };
 
           if (editingItem) {

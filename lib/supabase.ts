@@ -63,7 +63,7 @@ export type NewsItem = {
   content: string;
   image_url?: string;
   video_url?: string;
-  created_by?: string;
+  author_id?: string;
   created_at: string;
   updated_at: string;
   profiles?: Profile;
