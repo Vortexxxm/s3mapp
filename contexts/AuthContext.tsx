@@ -22,56 +22,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    initializeAuth();
+    let mounted = true;
+    
+    const initialize = async () => {
+      try {
+        // Check for stored session
+        const storedSession = await storage.getItemAsync('supabase-session');
+        
+        if (storedSession && mounted) {
+          const parsedSession = JSON.parse(storedSession);
+          await supabase.auth.setSession(parsedSession);
+        }
+
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          setSession(session);
+          
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          }
+          
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initialize();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       setSession(session);
       
       // Store or remove session
-      if (session) {
-        await storage.setItemAsync('supabase-session', JSON.stringify(session));
-        await fetchProfile(session.user.id);
+      try {
+        if (session) {
+          await storage.setItemAsync('supabase-session', JSON.stringify(session));
+          if (session.user) {
+            await fetchProfile(session.user.id);
+          }
+        } else {
+          await storage.deleteItemAsync('supabase-session');
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
       } else {
-        await storage.deleteItemAsync('supabase-session');
         setProfile(null);
       }
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
-
-  const initializeAuth = async () => {
-    try {
-      // Check for stored session
-      const storedSession = await storage.getItemAsync('supabase-session');
-      
-      if (storedSession) {
-        const parsedSession = JSON.parse(storedSession);
-        await supabase.auth.setSession(parsedSession);
-      }
-
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      }
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -85,8 +99,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

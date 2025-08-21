@@ -10,7 +10,7 @@ import AuthScreen from '@/components/AuthScreen';
 import ProfileSetupScreen from '@/components/ProfileSetupScreen';
 
 function AppContent() {
-  const { session, loading } = useAuth();
+  const { session, loading, profile } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
   if (showSplash) {
@@ -26,7 +26,6 @@ function AppContent() {
   }
 
   // Check if profile setup is needed
-  const { profile } = useAuth();
   if (session && (!profile?.username || !profile?.avatar_url)) {
     return <ProfileSetupScreen />;
   }
