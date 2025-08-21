@@ -39,19 +39,21 @@ export default function HomeScreen() {
   };
 
   const setupRealtimeSubscription = () => {
-    const subscription = supabase
+    const newsSubscription = supabase
       .channel('news_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'news' },
-        () => {
+        (payload) => {
+          console.log('News change detected:', payload);
+          // Refresh news data when any change occurs
           fetchNews();
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      newsSubscription.unsubscribe();
     };
   };
 

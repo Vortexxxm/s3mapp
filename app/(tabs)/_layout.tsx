@@ -1,9 +1,21 @@
 import { Tabs } from 'expo-router';
 import { Chrome as Home, Trophy, Medal, User, Settings } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
 
 export default function TabLayout() {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Only show admin tab if user is explicitly an admin
+    setIsAdmin(profile?.role === 'admin');
+  }, [profile]);
+
+  // Don't render tabs until we know the user's role
+  if (loading || !profile) {
+    return null;
+  }
 
   return (
     <Tabs
@@ -63,7 +75,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      {profile?.role === 'admin' && (
+      {isAdmin && (
         <Tabs.Screen
           name="admin"
           options={{

@@ -92,6 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // data will be null if no profile exists (expected for new users)
       setProfile(data);
+      
+      // Log role for debugging (remove in production)
+      if (data) {
+        console.log('User role:', data.role);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);

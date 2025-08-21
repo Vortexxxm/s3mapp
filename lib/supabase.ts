@@ -31,6 +31,7 @@ if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   console.error('Required environment variables:');
   console.error('- EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
   console.error('- EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
+  console.error('- EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key (for admin functions)');
   
   // Create dummy clients to prevent app crashes during development
   const dummyUrl = 'https://dummy.supabase.co';
@@ -43,6 +44,13 @@ if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   supabaseAdmin = supabaseServiceKey && isValidKey(supabaseServiceKey)
     ? createClient(supabaseUrl!, supabaseServiceKey)
     : supabase;
+    
+  // Log admin client status for debugging
+  if (supabaseServiceKey && isValidKey(supabaseServiceKey)) {
+    console.log('✅ Admin client configured with service role key');
+  } else {
+    console.warn('⚠️  Admin client using anon key - some admin functions may not work');
+  }
 }
 
 

@@ -37,19 +37,21 @@ export default function TopPlayersScreen() {
   };
 
   const setupRealtimeSubscription = () => {
-    const subscription = supabase
+    const playersSubscription = supabase
       .channel('top_players_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'top_players' },
-        () => {
+        (payload) => {
+          console.log('Top players change detected:', payload);
+          // Refresh top players data when any change occurs
           fetchTopPlayers();
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      playersSubscription.unsubscribe();
     };
   };
 

@@ -37,19 +37,21 @@ export default function LeaderboardScreen() {
   };
 
   const setupRealtimeSubscription = () => {
-    const subscription = supabase
+    const leaderboardSubscription = supabase
       .channel('leaderboard_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'leaderboard' },
-        () => {
+        (payload) => {
+          console.log('Leaderboard change detected:', payload);
+          // Refresh leaderboard data when any change occurs
           fetchLeaderboard();
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      leaderboardSubscription.unsubscribe();
     };
   };
 

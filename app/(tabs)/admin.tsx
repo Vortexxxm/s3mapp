@@ -16,14 +16,29 @@ import { Plus, CreditCard as Edit3, Trash2, Users, Trophy, Award, Newspaper as N
 import * as ImagePicker from 'expo-image-picker';
 import { supabase, supabaseAdmin, NewsItem, LeaderboardEntry, TopPlayer, Profile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { router } from 'expo-router';
 
 export default function AdminScreen() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('news');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [editingItem, setEditingItem] = useState<any>(null);
   
+  // Security check - redirect if not admin
+  useEffect(() => {
+    if (profile && profile.role !== 'admin') {
+      Alert.alert('Access Denied', 'You do not have permission to access this area.');
+      router.replace('/');
+      return;
+    }
+  }, [profile]);
+
+  // Don't render anything if not admin
+  if (!profile || profile.role !== 'admin') {
+    return null;
+  }
+
   // News state
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsTitle, setNewsTitle] = useState('');
@@ -148,9 +163,11 @@ export default function AdminScreen() {
           };
 
           if (editingItem) {
-            await supabaseAdmin.from('news').update(newsData).eq('id', editingItem.id);
+            const { error } = await supabaseAdmin.from('news').update(newsData).eq('id', editingItem.id);
+            if (error) throw error;
           } else {
-            await supabaseAdmin.from('news').insert(newsData);
+            const { error } = await supabaseAdmin.from('news').insert(newsData);
+            if (error) throw error;
           }
           break;
 
@@ -167,9 +184,11 @@ export default function AdminScreen() {
           };
 
           if (editingItem) {
-            await supabaseAdmin.from('leaderboard').update(leaderboardData).eq('id', editingItem.id);
+            const { error } = await supabaseAdmin.from('leaderboard').update(leaderboardData).eq('id', editingItem.id);
+            if (error) throw error;
           } else {
-            await supabaseAdmin.from('leaderboard').insert(leaderboardData);
+            const { error } = await supabaseAdmin.from('leaderboard').insert(leaderboardData);
+            if (error) throw error;
           }
           break;
 
@@ -187,16 +206,18 @@ export default function AdminScreen() {
           };
 
           if (editingItem) {
-            await supabaseAdmin.from('top_players').update(playerData).eq('id', editingItem.id);
+            const { error } = await supabaseAdmin.from('top_players').update(playerData).eq('id', editingItem.id);
+            if (error) throw error;
           } else {
-            await supabaseAdmin.from('top_players').insert(playerData);
+            const { error } = await supabaseAdmin.from('top_players').insert(playerData);
+            if (error) throw error;
           }
           break;
       }
 
       setShowModal(false);
       clearForm();
-      fetchData();
+      // Don't manually fetch data - real-time subscriptions will handle updates
       Alert.alert('Success', `${modalType} ${editingItem ? 'updated' : 'created'} successfully!`);
     } catch (error: any) {
       Alert.alert('Error', error.message);
@@ -216,16 +237,19 @@ export default function AdminScreen() {
             try {
               switch (type) {
                 case 'news':
-                  await supabaseAdmin.from('news').delete().eq('id', id);
+                  const { error: newsError } = await supabaseAdmin.from('news').delete().eq('id', id);
+                  if (newsError) throw newsError;
                   break;
                 case 'leaderboard':
-                  await supabaseAdmin.from('leaderboard').delete().eq('id', id);
+                  const { error: leaderboardError } = await supabaseAdmin.from('leaderboard').delete().eq('id', id);
+                  if (leaderboardError) throw leaderboardError;
                   break;
                 case 'player':
-                  await supabaseAdmin.from('top_players').delete().eq('id', id);
+                  const { error: playerError } = await supabaseAdmin.from('top_players').delete().eq('id', id);
+                  if (playerError) throw playerError;
                   break;
               }
-              fetchData();
+              // Don't manually fetch data - real-time subscriptions will handle updates
               Alert.alert('Success', `${type} deleted successfully!`);
             } catch (error: any) {
               Alert.alert('Error', error.message);
