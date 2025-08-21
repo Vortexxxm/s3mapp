@@ -69,6 +69,7 @@ export type NewsItem = {
   id: string;
   title: string;
   content: string;
+  description?: string;
   image_url?: string;
   video_url?: string;
   author_id?: string;

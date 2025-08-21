@@ -44,6 +44,7 @@ export default function AdminScreen() {
   const [newsTitle, setNewsTitle] = useState('');
   const [newsContent, setNewsContent] = useState('');
   const [newsImage, setNewsImage] = useState('');
+  const [newsDescription, setNewsDescription] = useState('');
   
   // Leaderboard state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -100,6 +101,7 @@ export default function AdminScreen() {
           setNewsTitle(item.title);
           setNewsContent(item.content);
           setNewsImage(item.image_url || '');
+          setNewsDescription(item.description || '');
           break;
         case 'leaderboard':
           setTeamName(item.team_name);
@@ -124,6 +126,7 @@ export default function AdminScreen() {
     setNewsTitle('');
     setNewsContent('');
     setNewsImage('');
+    setNewsDescription('');
     setTeamName('');
     setPoints('');
     setRank('');
@@ -134,11 +137,18 @@ export default function AdminScreen() {
   };
 
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images.');
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
+      aspect: [16, 10],
+      quality: 0.9,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -150,14 +160,20 @@ export default function AdminScreen() {
     try {
       switch (modalType) {
         case 'news':
-          if (!newsTitle || !newsContent) {
-            Alert.alert('Error', 'Please fill in all required fields');
+          if (!newsTitle || !newsContent || !newsDescription) {
+            Alert.alert('Error', 'Please fill in title, description, and content');
+            return;
+          }
+          
+          if (!newsImage) {
+            Alert.alert('Error', 'Please add an image for the news post');
             return;
           }
           
           const newsData = {
             title: newsTitle,
             content: newsContent,
+            description: newsDescription,
             image_url: newsImage || null,
             author_id: session?.user?.id || null,
           };
@@ -218,7 +234,7 @@ export default function AdminScreen() {
       setShowModal(false);
       clearForm();
       // Don't manually fetch data - real-time subscriptions will handle updates
-      Alert.alert('Success', `${modalType} ${editingItem ? 'updated' : 'created'} successfully!`);
+      Alert.alert('Success', `${modalType === 'news' ? 'News' : modalType === 'leaderboard' ? 'Team' : 'Player'} ${editingItem ? 'updated' : 'created'} successfully!`);
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
@@ -274,6 +290,9 @@ export default function AdminScreen() {
 
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
     <View style={styles.itemCard}>
+      {item.image_url && (
+        <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+      )}
       <View style={styles.itemHeader}>
         <Text style={styles.itemTitle}>{item.title}</Text>
         <View style={styles.itemActions}>
@@ -285,8 +304,13 @@ export default function AdminScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <Text style={styles.itemContent} numberOfLines={2}>{item.content}</Text>
-      {item.image_url && <Image source={{ uri: item.image_url }} style={styles.itemImage} />}
+      {item.description && (
+        <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text>
+      )}
+      <Text style={styles.itemContent} numberOfLines={3}>{item.content}</Text>
+      <Text style={styles.itemDate}>
+        {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+      </Text>
     </View>
   );
 
@@ -390,16 +414,25 @@ export default function AdminScreen() {
                   />
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="News Content"
+                    placeholder="Short Description (appears in news feed)"
+                    placeholderTextColor="#666"
+                    value={newsDescription}
+                    onChangeText={setNewsDescription}
+                    multiline
+                    numberOfLines={2}
+                  />
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Full News Content (appears when users click 'Read more')"
                     placeholderTextColor="#666"
                     value={newsContent}
                     onChangeText={setNewsContent}
                     multiline
-                    numberOfLines={4}
+                    numberOfLines={6}
                   />
                   <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
                     <Text style={styles.imageButtonText}>
-                      {newsImage ? 'Change Image' : 'Add Image (Optional)'}
+                      {newsImage ? 'Change Image' : 'Add Image (Required)'}
                     </Text>
                   </TouchableOpacity>
                   {newsImage && <Image source={{ uri: newsImage }} style={styles.previewImage} />}
@@ -583,13 +616,24 @@ const styles = StyleSheet.create({
   itemContent: {
     fontSize: 14,
     color: '#CCCCCC',
-    marginBottom: 4,
+    marginBottom: 8,
+  },
+  itemDescription: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  itemDate: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
   },
   itemImage: {
     width: '100%',
-    height: 120,
+    height: 150,
     borderRadius: 8,
-    marginTop: 8,
+    marginBottom: 12,
   },
   mvpPoints: {
     fontSize: 16,
