@@ -76,7 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error handling auth state change:', error);
-      }
     });
 
     return () => {
@@ -96,7 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      // If no profile exists yet, set profile to null
+      // This will trigger the ProfileSetupScreen
+      setProfile(null);
     }
   };
 
