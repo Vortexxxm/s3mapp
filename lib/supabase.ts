@@ -5,20 +5,42 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing required Supabase environment variables. Please check your .env file.');
+// Check if environment variables are properly configured (not placeholders)
+const isValidUrl = (url: string | undefined): boolean => {
+  if (!url || url.includes('your_supabase_project_url_here') || url.includes('placeholder')) {
+    return false;
+  }
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const isValidKey = (key: string | undefined): boolean => {
+  return !!(key && !key.includes('your_supabase_anon_key_here') && !key.includes('placeholder') && key.length > 20);
+};
+
+if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
+  console.error('⚠️  Supabase configuration missing or invalid. Please update your .env file with actual Supabase credentials.');
+  console.error('Required environment variables:');
+  console.error('- EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
+  console.error('- EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
+  
+  // Create dummy clients to prevent app crashes during development
+  const dummyUrl = 'https://dummy.supabase.co';
+  const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.dummy';
+  
+  export const supabase = createClient(dummyUrl, dummyKey);
+  export const supabaseAdmin = supabase;
+} else {
+  export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+  export const supabaseAdmin = supabaseServiceKey && isValidKey(supabaseServiceKey)
+    ? createClient(supabaseUrl!, supabaseServiceKey)
+    : supabase;
 }
 
-if (!supabaseServiceKey) {
-  console.warn('EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY is missing. Admin functions will not work.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Admin client for operations that bypass RLS
-export const supabaseAdmin = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : supabase; // Fallback to regular client if service key is missing
 
 export type Profile = {
   id: string;
