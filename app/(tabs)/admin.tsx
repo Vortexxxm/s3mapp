@@ -13,19 +13,7 @@ import {
   FlatList,
   I18nManager,
 } from 'react-native';
-import {
-  Settings,
-  Plus,
-  Edit3,
-  Trash2,
-  Save,
-  X,
-  Camera,
-  Users,
-  Trophy,
-  Medal,
-  Star,
-} from 'lucide-react-native';
+import { Settings, Plus, CreditCard as Edit3, Trash2, Save, X, Camera, Users, Trophy, Medal, Star } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, Profile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
