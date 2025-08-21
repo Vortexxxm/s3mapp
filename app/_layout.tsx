@@ -1,4 +1,5 @@
-import { useFrameworkReady } from '@/hooks/useFrameworkReady'import React, { useEffect, useState } from 'react';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
