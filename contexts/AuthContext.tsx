@@ -76,9 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error handling auth state change:', error);
-      } else {
-        setProfile(null);
-      }
     });
 
     return () => {
