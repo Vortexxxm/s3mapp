@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Info } from 'lucide-react-native';
 
@@ -12,6 +12,13 @@ interface UpdateToastProps {
 export default function UpdateToast({ message, type, visible, onHide }: UpdateToastProps) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(-100));
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -30,7 +37,9 @@ export default function UpdateToast({ message, type, visible, onHide }: UpdateTo
 
       // Auto hide after 3 seconds
       const timer = setTimeout(() => {
-        hideToast();
+        if (isMountedRef.current) {
+          hideToast();
+        }
       }, 3000);
 
       return () => clearTimeout(timer);
@@ -50,7 +59,9 @@ export default function UpdateToast({ message, type, visible, onHide }: UpdateTo
         useNativeDriver: true,
       }),
     ]).start(() => {
-      onHide();
+      if (isMountedRef.current) {
+        onHide();
+      }
     });
   };
 
