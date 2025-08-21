@@ -6,7 +6,6 @@ import {
   FlatList,
   RefreshControl,
   SafeAreaView,
-  I18nManager,
 } from 'react-native';
 import { Trophy } from 'lucide-react-native';
 import { LeaderboardEntry } from '@/lib/supabase';
@@ -20,7 +19,6 @@ export default function LeaderboardScreen() {
   const [lastLeaderboardCount, setLastLeaderboardCount] = useState(0);
 
   useEffect(() => {
-    I18nManager.forceRTL(true);
     setLastLeaderboardCount(leaderboard.length);
   }, []);
 

@@ -8,7 +8,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
-  I18nManager,
 } from 'react-native';
 import { Calendar, User, ChevronRight } from 'lucide-react-native';
 import { NewsItem } from '@/lib/supabase';
@@ -25,7 +24,6 @@ export default function HomeScreen() {
   const [lastNewsCount, setLastNewsCount] = useState(0);
 
   useEffect(() => {
-    I18nManager.forceRTL(true);
     setLastNewsCount(news.length);
   }, []);
 

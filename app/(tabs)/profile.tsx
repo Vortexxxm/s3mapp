@@ -10,7 +10,6 @@ import {
   ScrollView,
   Image,
   Modal,
-  I18nManager,
 } from 'react-native';
 import { User, LogOut, CreditCard as Edit3, Save, Camera, Key } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -27,10 +26,6 @@ export default function ProfileScreen() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  useEffect(() => {
-    I18nManager.forceRTL(true);
-  }, []);
 
   const handleSave = async () => {
     if (!username.trim()) {

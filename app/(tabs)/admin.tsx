@@ -11,7 +11,6 @@ import {
   Image,
   Modal,
   FlatList,
-  I18nManager,
 } from 'react-native';
 import { Settings, Plus, CreditCard as Edit3, Trash2, Save, X, Camera, Users, Trophy, Medal, Star } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -88,7 +87,6 @@ export default function AdminScreen() {
   });
 
   useEffect(() => {
-    I18nManager.forceRTL(true);
     // Data is already being fetched by DataProvider
   }, []);
 

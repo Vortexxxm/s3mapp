@@ -4,17 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
 import RealtimeIndicator from '@/components/RealtimeIndicator';
 import { useEffect, useState } from 'react';
-import { I18nManager } from 'react-native';
 
 export default function TabLayout() {
   const { profile, loading } = useAuth();
   const { isConnected } = useRealtimeConnection();
   const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    // Force RTL layout
-    I18nManager.forceRTL(true);
-  }, []);
 
   useEffect(() => {
     // Only show admin tab if user is explicitly an admin

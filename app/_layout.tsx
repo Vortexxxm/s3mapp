@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet, I18nManager } from 'react-native';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { DataProvider } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,9 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import SplashScreen from '@/components/SplashScreen';
 import AuthScreen from '@/components/AuthScreen';
 import ProfileSetupScreen from '@/components/ProfileSetupScreen';
+
+// Set RTL globally at the application entry point
+I18nManager.forceRTL(true);
 
 function LoadingScreen() {
   return (

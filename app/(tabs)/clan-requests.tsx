@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Alert,
   SafeAreaView,
-  I18nManager,
   FlatList,
   RefreshControl,
 } from 'react-native';
@@ -30,7 +29,6 @@ export default function ClanRequestsScreen() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    I18nManager.forceRTL(true);
     setLastRequestsCount(clanRequests.length);
   }, []);
 
