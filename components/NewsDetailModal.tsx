@@ -13,6 +13,8 @@ import {
 import { X, Calendar, User, UserPlus } from 'lucide-react-native';
 import { NewsItem, supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import ClanJoinForm from './ClanJoinForm';
+import { useState } from 'react';
 
 interface NewsDetailModalProps {
   visible: boolean;
@@ -22,6 +24,7 @@ interface NewsDetailModalProps {
 
 export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDetailModalProps) {
   const { session } = useAuth();
+  const [showJoinForm, setShowJoinForm] = useState(false);
   
   if (!newsItem) return null;
 
@@ -49,21 +52,7 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
                            newsItem.content.toLowerCase().includes('فتح التقديم');
 
   const handleJoinClan = () => {
-    Alert.alert(
-      'طلب الانضمام للكلان',
-      'هل تريد تقديم طلب للانضمام للكلان؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'نعم', 
-          onPress: () => {
-            onClose();
-            // Navigate to clan request form (you can implement navigation here)
-            Alert.alert('معلومات', 'يرجى الذهاب إلى قسم "أفضل زعيم" لتقديم طلب الانضمام');
-          }
-        },
-      ]
-    );
+    setShowJoinForm(true);
   };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
@@ -113,6 +102,11 @@ export default function NewsDetailModal({ visible, onClose, newsItem }: NewsDeta
             )}
           </View>
         </ScrollView>
+        
+        <ClanJoinForm 
+          visible={showJoinForm} 
+          onClose={() => setShowJoinForm(false)} 
+        />
       </SafeAreaView>
     </Modal>
   );

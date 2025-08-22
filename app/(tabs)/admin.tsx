@@ -5,23 +5,22 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
   SafeAreaView,
-  FlatList,
-  RefreshControl,
 } from 'react-native';
-import { Settings, Plus, Send, Users, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
+import { Settings, Newspaper, Trophy, Medal, Users, Crown, UserCheck } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { useData } from '@/contexts/DataContext';
-import { supabase, ClanJoinRequest } from '@/lib/supabase';
+import NewsManagement from '@/components/admin/NewsManagement';
+import LeaderboardManagement from '@/components/admin/LeaderboardManagement';
+import TopPlayersManagement from '@/components/admin/TopPlayersManagement';
+import ClanRequestsManagement from '@/components/admin/ClanRequestsManagement';
+import MembersManagement from '@/components/admin/MembersManagement';
+import NotificationSender from '@/components/admin/NotificationSender';
+
+type AdminSection = 'news' | 'leaderboard' | 'players' | 'requests' | 'members' | 'notifications';
 
 export default function AdminScreen() {
   const { profile } = useAuth();
-  const { clanRequests, refreshClanRequests, requestsLoading } = useData();
-  const [notificationTitle, setNotificationTitle] = useState('');
-  const [notificationMessage, setNotificationMessage] = useState('');
-  const [sendingNotification, setSendingNotification] = useState(false);
+  const [activeSection, setActiveSection] = useState<AdminSection>('news');
 
   // Redirect if not admin
   if (profile?.role !== 'admin') {
@@ -34,175 +33,73 @@ export default function AdminScreen() {
     );
   }
 
-  const sendNotificationToAll = async () => {
-    if (!notificationTitle.trim() || !notificationMessage.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
-      return;
-    }
+  const adminSections = [
+    { id: 'news' as AdminSection, title: 'إدارة الأخبار', icon: Newspaper },
+    { id: 'leaderboard' as AdminSection, title: 'إدارة المتصدرين', icon: Trophy },
+    { id: 'players' as AdminSection, title: 'إدارة أفضل لاعب', icon: Medal },
+    { id: 'requests' as AdminSection, title: 'طلبات الانضمام', icon: Users },
+    { id: 'members' as AdminSection, title: 'إدارة الأعضاء', icon: UserCheck },
+    { id: 'notifications' as AdminSection, title: 'إرسال إشعارات', icon: Crown },
+  ];
 
-    setSendingNotification(true);
-    try {
-      // Get all user profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id');
-
-      if (profilesError) throw profilesError;
-
-      // Create notifications for all users
-      const notifications = profiles?.map(profile => ({
-        user_id: profile.id,
-        title: notificationTitle.trim(),
-        message: notificationMessage.trim(),
-        type: 'info' as const,
-      })) || [];
-
-      const { error } = await supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (error) throw error;
-
-      setNotificationTitle('');
-      setNotificationMessage('');
-      Alert.alert('نجح', 'تم إرسال الإشعار لجميع المستخدمين');
-    } catch (error: any) {
-      Alert.alert('خطأ', error.message);
-    } finally {
-      setSendingNotification(false);
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'news':
+        return <NewsManagement />;
+      case 'leaderboard':
+        return <LeaderboardManagement />;
+      case 'players':
+        return <TopPlayersManagement />;
+      case 'requests':
+        return <ClanRequestsManagement />;
+      case 'members':
+        return <MembersManagement />;
+      case 'notifications':
+        return <NotificationSender />;
+      default:
+        return <NewsManagement />;
     }
   };
-
-  const handleRequestAction = async (requestId: string, action: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase
-        .from('clan_join_requests')
-        .update({ status: action })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      Alert.alert('نجح', `تم ${action === 'approved' ? 'قبول' : 'رفض'} الطلب`);
-      refreshClanRequests();
-    } catch (error: any) {
-      Alert.alert('خطأ', error.message);
-    }
-  };
-
-  const renderRequestItem = ({ item }: { item: ClanJoinRequest }) => (
-    <View style={styles.requestCard}>
-      <View style={styles.requestHeader}>
-        <Text style={styles.requestUsername}>
-          {item.profiles?.username || 'مستخدم غير معروف'}
-        </Text>
-        <Text style={[
-          styles.requestStatus,
-          item.status === 'approved' && styles.approvedStatus,
-          item.status === 'rejected' && styles.rejectedStatus,
-        ]}>
-          {item.status === 'pending' ? 'في الانتظار' : 
-           item.status === 'approved' ? 'مقبول' : 'مرفوض'}
-        </Text>
-      </View>
-      
-      <Text style={styles.requestDetail}>
-        اسم اللاعب في فري فاير: {item.free_fire_username}
-      </Text>
-      <Text style={styles.requestDetail}>العمر: {item.age}</Text>
-      <Text style={styles.requestReason}>{item.reason}</Text>
-      
-      {item.status === 'pending' && (
-        <View style={styles.requestActions}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.approveButton]}
-            onPress={() => handleRequestAction(item.id, 'approved')}
-          >
-            <CheckCircle size={16} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>قبول</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, styles.rejectButton]}
-            onPress={() => handleRequestAction(item.id, 'rejected')}
-          >
-            <XCircle size={16} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>رفض</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Settings size={24} color="#DC143C" />
-        <Text style={styles.headerTitle}>لوحة الإدارة</Text>
+        <Text style={styles.headerTitle}>لوحة تحكم الأدمن</Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Send Notification Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>إرسال إشعار لجميع المستخدمين</Text>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="عنوان الإشعار"
-            placeholderTextColor="#666"
-            value={notificationTitle}
-            onChangeText={setNotificationTitle}
-          />
-          
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="محتوى الإشعار"
-            placeholderTextColor="#666"
-            value={notificationMessage}
-            onChangeText={setNotificationMessage}
-            multiline
-            numberOfLines={3}
-          />
-          
-          <TouchableOpacity
-            style={[styles.sendButton, sendingNotification && styles.buttonDisabled]}
-            onPress={sendNotificationToAll}
-            disabled={sendingNotification}
-          >
-            <Send size={20} color="#FFFFFF" />
-            <Text style={styles.sendButtonText}>
-              {sendingNotification ? 'جاري الإرسال...' : 'إرسال الإشعار'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.tabsContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {adminSections.map((section) => {
+            const IconComponent = section.icon;
+            return (
+              <TouchableOpacity
+                key={section.id}
+                style={[
+                  styles.tab,
+                  activeSection === section.id && styles.activeTab
+                ]}
+                onPress={() => setActiveSection(section.id)}
+              >
+                <IconComponent 
+                  size={18} 
+                  color={activeSection === section.id ? '#FFFFFF' : '#CCCCCC'} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeSection === section.id && styles.activeTabText
+                ]}>
+                  {section.title}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
-        {/* Clan Requests Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Users size={20} color="#DC143C" />
-            <Text style={styles.sectionTitle}>طلبات الانضمام للكلان</Text>
-          </View>
-          
-          <FlatList
-            data={clanRequests}
-            renderItem={renderRequestItem}
-            keyExtractor={(item) => item.id}
-            refreshControl={
-              <RefreshControl
-                refreshing={requestsLoading}
-                onRefresh={refreshClanRequests}
-                tintColor="#DC143C"
-              />
-            }
-            scrollEnabled={false}
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Users size={48} color="#666" />
-                <Text style={styles.emptyText}>لا توجد طلبات انضمام</Text>
-              </View>
-            }
-          />
-        </View>
-      </ScrollView>
+      <View style={styles.content}>
+        {renderContent()}
+      </View>
     </SafeAreaView>
   );
 }
@@ -222,147 +119,41 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#DC143C',
     marginLeft: 8,
     writingDirection: 'rtl',
   },
-  content: {
-    flex: 1,
-  },
-  section: {
-    padding: 20,
+  tabsContainer: {
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
-  sectionHeader: {
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    marginVertical: 8,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginRight: 8,
-    writingDirection: 'rtl',
-  },
-  input: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-    writingDirection: 'rtl',
-    textAlign: 'right',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  sendButton: {
+  activeTab: {
     backgroundColor: '#DC143C',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  sendButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    writingDirection: 'rtl',
-  },
-  requestCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  requestUsername: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    writingDirection: 'rtl',
-  },
-  requestStatus: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#FFD700',
-    writingDirection: 'rtl',
-  },
-  approvedStatus: {
-    color: '#4CAF50',
-  },
-  rejectedStatus: {
-    color: '#FF4444',
-  },
-  requestDetail: {
+  tabText: {
     fontSize: 14,
     color: '#CCCCCC',
-    marginBottom: 4,
+    marginLeft: 6,
     writingDirection: 'rtl',
-    textAlign: 'right',
+    fontWeight: '500',
   },
-  requestReason: {
-    fontSize: 14,
+  activeTabText: {
     color: '#FFFFFF',
-    marginBottom: 16,
-    writingDirection: 'rtl',
-    textAlign: 'right',
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
-  },
-  approveButton: {
-    backgroundColor: '#4CAF50',
-  },
-  rejectButton: {
-    backgroundColor: '#FF4444',
-  },
-  actionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 4,
-    writingDirection: 'rtl',
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 16,
-    writingDirection: 'rtl',
+  content: {
+    flex: 1,
   },
   errorContainer: {
     flex: 1,

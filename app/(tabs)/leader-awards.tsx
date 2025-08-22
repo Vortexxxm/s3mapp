@@ -8,17 +8,20 @@ import {
   RefreshControl,
   SafeAreaView,
   Image,
+  TouchableOpacity,
 } from 'react-native';
-import { Crown } from 'lucide-react-native';
+import { Crown, UserPlus } from 'lucide-react-native';
 import { SpecialAward } from '@/lib/supabase';
 import { useData } from '@/contexts/DataContext';
 import AnimatedListItem from '@/components/AnimatedListItem';
 import UpdateToast from '@/components/UpdateToast';
+import ClanJoinForm from '@/components/ClanJoinForm';
 
 export default function LeaderAwardsScreen() {
   const { awards, awardsLoading, refreshAwards } = useData();
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastAwardsCount, setLastAwardsCount] = useState(0);
+  const [showJoinForm, setShowJoinForm] = useState(false);
   const isMountedRef = useRef(true);
 
   // Filter awards to show only leader awards
@@ -112,6 +115,14 @@ export default function LeaderAwardsScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>أفضل زعيم</Text>
         <Text style={styles.headerSubtitle}>جوائز أفضل زعيم وأفضل لاعب</Text>
+        
+        <TouchableOpacity
+          style={styles.joinClanButton}
+          onPress={() => setShowJoinForm(true)}
+        >
+          <UserPlus size={20} color="#FFFFFF" />
+          <Text style={styles.joinClanButtonText}>انضم للكلان</Text>
+        </TouchableOpacity>
       </View>
       
       <FlatList
@@ -127,6 +138,11 @@ export default function LeaderAwardsScreen() {
         }
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+      />
+      
+      <ClanJoinForm 
+        visible={showJoinForm} 
+        onClose={() => setShowJoinForm(false)} 
       />
     </SafeAreaView>
   );
@@ -155,6 +171,22 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     textAlign: 'center',
     marginTop: 4,
+    writingDirection: 'rtl',
+  },
+  joinClanButton: {
+    backgroundColor: '#DC143C',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  joinClanButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
     writingDirection: 'rtl',
   },
   listContainer: {
