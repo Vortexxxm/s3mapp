@@ -99,10 +99,9 @@ export default function ProfileSetupScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Image 
-            source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')} 
-            style={styles.logo}
-          />
+          <View style={styles.logoPlaceholder}>
+            <Text style={styles.logoText}>S3M</Text>
+          </View>
           <Text style={styles.title}>أكمل ملفك الشخصي</Text>
           <Text style={styles.subtitle}>قم بإعداد ملفك الشخصي للمتابعة</Text>
         </View>
@@ -189,11 +188,19 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginTop: 20,
   },
-  logo: {
+  logoPlaceholder: {
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: '#DC143C',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 28,

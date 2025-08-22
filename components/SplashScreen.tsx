@@ -22,10 +22,9 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <Image 
-          source={require('@/assets/images/491209940_1401910737608673_2308703142440827105_n.jpg')} 
-          style={styles.logo}
-        />
+        <View style={styles.logoPlaceholder}>
+          <Text style={styles.logoText}>S3M</Text>
+        </View>
         <Text style={styles.title}>S3M HUB</Text>
         <Text style={styles.subtitle}>E-SPORTS</Text>
       </Animated.View>
@@ -43,11 +42,19 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
   },
-  logo: {
+  logoPlaceholder: {
     width: 120,
     height: 120,
     borderRadius: 60,
+    backgroundColor: '#DC143C',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 36,

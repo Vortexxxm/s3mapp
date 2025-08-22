@@ -33,22 +33,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (mounted) {
           setSession(session);
-          setInitializing(false);
           
-          // Fetch profile in background if session exists
+          // Fetch profile and wait for completion before finishing initialization
           if (session?.user) {
-            fetchProfile(session.user.id);
+            await fetchProfile(session.user.id);
           } else {
             setProfile(null);
           }
+          
+          setInitializing(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
           setInitializing(false);
         }
-      } finally {
-        // Don't set loading here, let initializing handle it
       }
     };
 
@@ -63,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Handle profile in background
       if (session?.user) {
-        fetchProfile(session.user.id);
+        await fetchProfile(session.user.id);
       } else {
         setProfile(null);
       }
