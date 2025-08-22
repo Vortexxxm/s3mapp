@@ -11,7 +11,7 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { Plus, Edit3, Trash2, Save, X, Camera } from 'lucide-react-native';
+import { Plus, CreditCard as Edit3, Trash2, Save, X, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
