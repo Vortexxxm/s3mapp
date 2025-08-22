@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function AuthScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,6 +20,29 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+
+  // Show setup message if Supabase is not configured
+  if (!isSupabaseConfigured) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.setupContainer}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoPlaceholder}>
+              <Text style={styles.logoText}>S3M</Text>
+            </View>
+            <Text style={styles.title}>S3M HUB</Text>
+          </View>
+          
+          <View style={styles.setupMessage}>
+            <Text style={styles.setupTitle}>إعداد قاعدة البيانات مطلوب</Text>
+            <Text style={styles.setupText}>
+              يرجى النقر على زر "Connect to Supabase" في الأعلى لإعداد قاعدة البيانات وبدء استخدام التطبيق.
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -181,6 +205,35 @@ const styles = StyleSheet.create({
   switchText: {
     color: '#DC143C',
     fontSize: 16,
+    writingDirection: 'rtl',
+  },
+  setupContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  setupMessage: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#DC143C',
+    maxWidth: 400,
+  },
+  setupTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#DC143C',
+    textAlign: 'center',
+    marginBottom: 16,
+    writingDirection: 'rtl',
+  },
+  setupText: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    textAlign: 'center',
+    lineHeight: 24,
     writingDirection: 'rtl',
   },
 });

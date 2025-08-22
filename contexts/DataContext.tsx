@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, ClanJoinRequest, Notification } from '@/lib/supabase';
+import { supabase, NewsItem, LeaderboardEntry, TopPlayer, SpecialAward, ClanJoinRequest, Notification, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {
@@ -53,6 +53,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch functions with optimized loading states
   const refreshNews = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    
     setNewsLoading(true);
     try {
       const { data, error } = await supabase
@@ -73,6 +75,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshLeaderboard = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    
     setLeaderboardLoading(true);
     try {
       const { data, error } = await supabase
@@ -90,6 +94,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshTopPlayers = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    
     setPlayersLoading(true);
     try {
       const { data, error } = await supabase
@@ -107,6 +113,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshAwards = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    
     setAwardsLoading(true);
     try {
       const { data, error } = await supabase
@@ -124,6 +132,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshClanRequests = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
     if (!session?.user) return;
     
     setRequestsLoading(true);
@@ -150,6 +159,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user, profile?.role]);
 
   const refreshNotifications = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
     if (!session?.user) return;
     
     setNotificationsLoading(true);
@@ -170,6 +180,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [session?.user]);
 
   const markNotificationAsRead = useCallback(async (id: string) => {
+    if (!isSupabaseConfigured) return;
+    
     try {
       const { error } = await supabase
         .from('notifications')
@@ -206,7 +218,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Setup real-time subscriptions with optimized updates
   useEffect(() => {
-    if (!session) return;
+    if (!session || !isSupabaseConfigured) return;
 
     console.log('🔄 Setting up real-time subscriptions...');
 

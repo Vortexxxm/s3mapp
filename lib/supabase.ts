@@ -25,6 +25,7 @@ const isValidKey = (key: string | undefined): boolean => {
 // Declare exports at top level
 export let supabase: ReturnType<typeof createClient>;
 export let supabaseAdmin: ReturnType<typeof createClient>;
+export let isSupabaseConfigured: boolean = false;
 
 if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   console.error('⚠️  Supabase configuration missing or invalid. Please update your .env file with actual Supabase credentials.');
@@ -39,11 +40,13 @@ if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
   
   supabase = createClient(dummyUrl, dummyKey);
   supabaseAdmin = supabase;
+  isSupabaseConfigured = false;
 } else {
   supabase = createClient(supabaseUrl!, supabaseAnonKey!);
   supabaseAdmin = supabaseServiceKey && isValidKey(supabaseServiceKey)
     ? createClient(supabaseUrl!, supabaseServiceKey)
     : supabase;
+  isSupabaseConfigured = true;
     
   // Log admin client status for debugging
   if (supabaseServiceKey && isValidKey(supabaseServiceKey)) {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, supabaseAdmin, Profile } from '@/lib/supabase';
+import { supabase, supabaseAdmin, Profile, isSupabaseConfigured } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { storage } from '@/lib/storage';
 
@@ -105,6 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
+    }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -116,6 +120,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
+    }
+    
     return await supabase.auth.signInWithPassword({
       email,
       password,
@@ -123,11 +131,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+    
     await storage.deleteItemAsync('supabase-session');
     await supabase.auth.signOut();
   };
 
   const changePassword = async (newPassword: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
+    }
+    
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     });
@@ -135,6 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
   const updateProfile = async (updates: Partial<Profile>) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
+    }
+    
     if (!session?.user) return;
 
     const { error } = await supabase
