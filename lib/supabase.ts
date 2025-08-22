@@ -28,11 +28,11 @@ export let supabaseAdmin: ReturnType<typeof createClient>;
 export let isSupabaseConfigured: boolean = false;
 
 if (!isValidUrl(supabaseUrl) || !isValidKey(supabaseAnonKey)) {
-  console.error('⚠️  Supabase configuration missing or invalid. Please update your .env file with actual Supabase credentials.');
-  console.error('Required environment variables:');
-  console.error('- EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
-  console.error('- EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
-  console.error('- EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key (for admin functions)');
+  console.warn('⚠️  Supabase configuration missing or invalid. Please update your .env file with actual Supabase credentials.');
+  console.warn('Required environment variables:');
+  console.warn('- EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
+  console.warn('- EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
+  console.warn('- EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key (for admin functions)');
   
   // Create dummy clients to prevent app crashes during development
   const dummyUrl = 'https://dummy.supabase.co';
