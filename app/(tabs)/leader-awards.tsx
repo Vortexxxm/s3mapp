@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRef } from 'react';
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ export default function LeaderAwardsScreen() {
   const { awards, awardsLoading, refreshAwards } = useData();
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastAwardsCount, setLastAwardsCount] = useState(0);
+  const isMountedRef = useRef(true);
 
   // Filter awards to show only leader awards
   const leaderAwards = awards.filter(award => 
@@ -27,15 +29,25 @@ export default function LeaderAwardsScreen() {
   );
 
   useEffect(() => {
-    setLastAwardsCount(leaderAwards.length);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setLastAwardsCount(leaderAwards.length);
+    }
   }, []);
 
   // Show toast when awards are updated
   useEffect(() => {
-    if (lastAwardsCount > 0 && leaderAwards.length !== lastAwardsCount) {
+    if (isMountedRef.current && lastAwardsCount > 0 && leaderAwards.length !== lastAwardsCount) {
       setShowUpdateToast(true);
     }
-    setLastAwardsCount(leaderAwards.length);
+    if (isMountedRef.current) {
+      setLastAwardsCount(leaderAwards.length);
+    }
   }, [leaderAwards.length, lastAwardsCount]);
 
   const getAwardTypeText = (type: string) => {

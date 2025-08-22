@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRef } from 'react';
 import {
   View,
   Text,
@@ -17,17 +18,28 @@ export default function TopPlayersScreen() {
   const { topPlayers, playersLoading, refreshTopPlayers } = useData();
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastPlayersCount, setLastPlayersCount] = useState(0);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    setLastPlayersCount(topPlayers.length);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setLastPlayersCount(topPlayers.length);
+    }
   }, []);
 
   // Show toast when top players are updated
   useEffect(() => {
-    if (lastPlayersCount > 0 && topPlayers.length !== lastPlayersCount) {
+    if (isMountedRef.current && lastPlayersCount > 0 && topPlayers.length !== lastPlayersCount) {
       setShowUpdateToast(true);
     }
-    setLastPlayersCount(topPlayers.length);
+    if (isMountedRef.current) {
+      setLastPlayersCount(topPlayers.length);
+    }
   }, [topPlayers.length, lastPlayersCount]);
 
   const renderTopPlayerItem = ({ item }: { item: TopPlayer }) => {

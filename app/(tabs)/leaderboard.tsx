@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRef } from 'react';
 import {
   View,
   Text,
@@ -17,17 +18,28 @@ export default function LeaderboardScreen() {
   const { leaderboard, leaderboardLoading, refreshLeaderboard } = useData();
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastLeaderboardCount, setLastLeaderboardCount] = useState(0);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    setLastLeaderboardCount(leaderboard.length);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setLastLeaderboardCount(leaderboard.length);
+    }
   }, []);
 
   // Show toast when leaderboard is updated
   useEffect(() => {
-    if (lastLeaderboardCount > 0 && leaderboard.length !== lastLeaderboardCount) {
+    if (isMountedRef.current && lastLeaderboardCount > 0 && leaderboard.length !== lastLeaderboardCount) {
       setShowUpdateToast(true);
     }
-    setLastLeaderboardCount(leaderboard.length);
+    if (isMountedRef.current) {
+      setLastLeaderboardCount(leaderboard.length);
+    }
   }, [leaderboard.length, lastLeaderboardCount]);
 
   const renderLeaderboardItem = ({ item, index }: { item: LeaderboardEntry; index: number }) => {

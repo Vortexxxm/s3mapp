@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRef } from 'react';
 import {
   View,
   Text,
@@ -22,17 +23,28 @@ export default function HomeScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [lastNewsCount, setLastNewsCount] = useState(0);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    setLastNewsCount(news.length);
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      setLastNewsCount(news.length);
+    }
   }, []);
 
   // Show toast when new news is added
   useEffect(() => {
-    if (lastNewsCount > 0 && news.length > lastNewsCount) {
+    if (isMountedRef.current && lastNewsCount > 0 && news.length > lastNewsCount) {
       setShowUpdateToast(true);
     }
-    setLastNewsCount(news.length);
+    if (isMountedRef.current) {
+      setLastNewsCount(news.length);
+    }
   }, [news.length, lastNewsCount]);
 
   const formatDate = (dateString: string) => {
