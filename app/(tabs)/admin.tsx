@@ -11,7 +11,7 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { Settings, Plus, Send, Users, CheckCircle, XCircle } from 'lucide-react-native';
+import { Settings, Plus, Send, Users, CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { supabase, ClanJoinRequest } from '@/lib/supabase';
