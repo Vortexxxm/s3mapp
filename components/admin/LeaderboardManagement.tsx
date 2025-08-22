@@ -11,7 +11,7 @@ import {
   Modal,
   SafeAreaView,
 } from 'react-native';
-import { Plus, Edit3, Trash2, Save, X, Trophy } from 'lucide-react-native';
+import { Plus, CreditCard as Edit3, Trash2, Save, X, Trophy } from 'lucide-react-native';
 import { useData } from '@/contexts/DataContext';
 import { supabase, LeaderboardEntry } from '@/lib/supabase';
 
