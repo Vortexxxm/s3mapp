@@ -7,7 +7,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { Trash2, AlertTriangle, Database } from 'lucide-react-native';
+import { Trash2, TriangleAlert as AlertTriangle, Database } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 
 export default function DataManagement() {
