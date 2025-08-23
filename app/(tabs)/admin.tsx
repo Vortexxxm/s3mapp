@@ -15,8 +15,9 @@ import TopPlayersManagement from '@/components/admin/TopPlayersManagement';
 import ClanRequestsManagement from '@/components/admin/ClanRequestsManagement';
 import MembersManagement from '@/components/admin/MembersManagement';
 import NotificationSender from '@/components/admin/NotificationSender';
+import DataManagement from '@/components/admin/DataManagement';
 
-type AdminSection = 'news' | 'leaderboard' | 'players' | 'requests' | 'members' | 'notifications';
+type AdminSection = 'news' | 'leaderboard' | 'players' | 'requests' | 'members' | 'notifications' | 'data';
 
 export default function AdminScreen() {
   const { profile } = useAuth();
@@ -40,6 +41,7 @@ export default function AdminScreen() {
     { id: 'requests' as AdminSection, title: 'طلبات الانضمام', icon: Users },
     { id: 'members' as AdminSection, title: 'إدارة الأعضاء', icon: UserCheck },
     { id: 'notifications' as AdminSection, title: 'إرسال إشعارات', icon: Crown },
+    { id: 'data' as AdminSection, title: 'إدارة البيانات', icon: Settings },
   ];
 
   const renderContent = () => {
@@ -56,6 +58,8 @@ export default function AdminScreen() {
         return <MembersManagement />;
       case 'notifications':
         return <NotificationSender />;
+      case 'data':
+        return <DataManagement />;
       default:
         return <NewsManagement />;
     }
