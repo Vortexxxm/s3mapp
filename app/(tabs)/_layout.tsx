@@ -3,17 +3,10 @@ import { Chrome as Home, Trophy, Medal, User, Settings, Crown, Bell } from 'luci
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
 import RealtimeIndicator from '@/components/RealtimeIndicator';
-import { useEffect, useState } from 'react';
 
 export default function TabLayout() {
   const { profile, loading } = useAuth();
   const { isConnected } = useRealtimeConnection();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    // Only show admin tab if user is explicitly an admin
-    setIsAdmin(profile?.role === 'admin');
-  }, [profile]);
 
   // Don't render tabs until we know the user's role
   if (loading || !profile) {
@@ -99,7 +92,7 @@ export default function TabLayout() {
             ),
           }}
         />
-        {isAdmin && (
+        {profile?.role === 'admin' && (
           <Tabs.Screen
             name="admin"
             options={{
