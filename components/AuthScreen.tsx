@@ -59,7 +59,23 @@ export default function AuthScreen() {
         await signIn(email, password);
       }
     } catch (error: any) {
-      Alert.alert('خطأ', error.message);
+      let errorMessage = 'حدث خطأ غير متوقع';
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = isSignUp 
+          ? 'البريد الإلكتروني مستخدم بالفعل أو كلمة المرور ضعيفة'
+          : 'البريد الإلكتروني أو كلمة المرور غير صحيح';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'يرجى تأكيد البريد الإلكتروني أولاً';
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      } else if (error.message?.includes('Unable to validate email address')) {
+        errorMessage = 'عنوان البريد الإلكتروني غير صالح';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('خطأ', errorMessage);
     } finally {
       setLoading(false);
     }
