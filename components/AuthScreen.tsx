@@ -65,6 +65,8 @@ export default function AuthScreen() {
         errorMessage = isSignUp 
           ? 'البريد الإلكتروني مستخدم بالفعل أو كلمة المرور ضعيفة'
           : 'البريد الإلكتروني أو كلمة المرور غير صحيح';
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = 'هذا البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول بدلاً من ذلك.';
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = 'يرجى تأكيد البريد الإلكتروني أولاً';
       } else if (error.message?.includes('Password should be at least')) {

@@ -109,14 +109,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
     }
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (error) throw error;
+      if (error) {
+        // Don't log authentication errors to console
+        const authError = new Error(error.message);
+        authError.name = 'AuthError';
+        throw authError;
+      }
 
-    return { data, error };
+      return { data, error };
+    } catch (error: any) {
+      // Re-throw without logging to console
+      throw error;
+    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -124,10 +134,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('يرجى إعداد اتصال Supabase أولاً. انقر على "Connect to Supabase" في الأعلى.');
     }
     
-    return await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        // Don't log authentication errors to console
+        const authError = new Error(error.message);
+        authError.name = 'AuthError';
+        throw authError;
+      }
+
+      return { data, error };
+    } catch (error: any) {
+      // Re-throw without logging to console
+      throw error;
+    }
   };
 
   const signOut = async () => {
